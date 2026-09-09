@@ -85,9 +85,9 @@ button.rrowk{display:flex;align-items:center;gap:10px;width:100%;text-align:left
 .dband .dcheck{margin-left:auto;width:24px;height:24px;border-radius:50%;background:var(--k-main);color:#fff;display:grid;place-items:center;font-size:.85rem}
 .dcard.later .dband .drange,.dcard.done .dband .drange,.dcard.none .dband .drange{font-size:.8rem}
 .dayarc{width:100%;max-width:560px;display:block;margin:0 auto 8px;height:auto}
-.dcard{border-left:10px solid transparent}
-.dcard.now{border-left-color:var(--k-main)}
-.dcard.overdue{border-left-color:var(--pending)}
+.kidcol .card.dcard{border-left:10px solid transparent} /* outranks .card's 1px border, which was shrinking the bar to a hairline */
+.kidcol .card.dcard.now{border-left-color:var(--k-ink)} /* dark bar on the current block, as in the mock-up */
+.kidcol .card.dcard.overdue{border-left-color:var(--pending)}
 .dcard.later,.dcard.none{opacity:.65}
 .dcard .rrowk.now{border-left:none}
 .dcard.later .dband,.dcard.done .dband,.dcard.none .dband{padding:4px 14px}
@@ -125,6 +125,19 @@ button.rrowk{display:flex;align-items:center;gap:10px;width:100%;text-align:left
 .swatches{display:flex;gap:6px}
 .swatches button{width:24px;height:24px;border-radius:50%;border:2px solid transparent}
 .swatches button.on{border-color:var(--ink)}
+.school{padding:8px 14px 10px;background:#fff;border-bottom:1px solid var(--k-jar);display:flex;flex-direction:column;gap:6px;font-size:.95rem;color:var(--k-ink)}
+.school .sl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;line-height:1.35}
+.school .sl .ic{flex:none}
+.school .sl .txt{flex:1;min-width:0}
+.school .muted{color:var(--k-muted)}
+.school .seg{display:inline-flex;border:1.5px solid var(--k-soft);border-radius:999px;overflow:hidden;margin-left:auto}
+.school .seg button{padding:4px 12px;font-size:.85rem;font-family:"Fredoka";color:var(--k-muted);background:#fff}
+.school .seg button.on{background:var(--k-accent);color:var(--k-ink)}
+.school .seg button.on.pack{background:var(--money-soft);color:#1f5e2c}
+.dcard.later .school,.dcard.done .school,.dcard.none .school{opacity:1}
+.specials{display:flex;gap:6px;flex-wrap:wrap}
+.specials label{display:flex;flex-direction:column;align-items:center;font-size:.7rem;color:var(--muted)}
+.specials input{width:64px;text-align:center}
 .kidcfg{flex-basis:100%;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding-top:8px}
 .kidcfg .wk{display:flex;gap:6px}
 .kidcfg label{display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -232,6 +245,9 @@ button.rrowk{display:flex;align-items:center;gap:10px;width:100%;text-align:left
 .agrid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;align-items:start}
 @media(max-width:860px){.agrid{grid-template-columns:1fr}}
 .sect h3{font-size:1rem;margin:2px 0 8px;color:var(--adult)}
+.sect .dplabel{font-size:.85rem;margin:10px 0 6px;color:var(--muted);font-weight:600}
+.sect .dplabel:first-of-type{margin-top:0}
+.secthead{display:flex;justify-content:space-between;align-items:center}
 .sub{list-style:none;padding:4px 0 8px 56px}
 .sub li{padding:4px 0}
 .sub .chk{padding:4px 0;font-size:.92rem}
@@ -440,7 +456,7 @@ button.rrowk{display:flex;align-items:center;gap:10px;width:100%;text-align:left
   <div class="toggle" role="tablist">
     <button id="tabKids" class="on" onclick="setView('kids')">Kids</button>
     <button id="tabAdult" onclick="setView('adult')">Adult</button>
-    <button id="tabRout" onclick="openRoutines()">Routines</button>
+    <button id="tabSettings" onclick="setView('settings')">Settings</button>
   </div>
 </div>
 <main id="app"></main>
@@ -891,6 +907,7 @@ function generateDay(data, date){
     data.subMemory[c.id] = data.subMemory[c.id] || {};
   }
   data.lastGen = dk;
+  const lc=data.settings.lunchChoices||{}; for(const d of Object.keys(lc)) if(daysBetween(d,dk)>14) delete lc[d];
 }
 function mkInst(c, pid, dk){
   const inst = { id:uid("i"), cid:c.id, pid, date:dk, state:"open" };
@@ -916,6 +933,42 @@ function involvesKid(data,c){ // kid visibility is derived: a child is in Who (o
 function needsAccountable(data,c){ // schema: accountable is required for child and outsourced work
   if(c.assignees?.length) return c.assignees.some(pid=>["child","vendor"].includes(data.people.find(p=>p.id===pid)?.role));
   return involvesKid(data,c) || c.ownerType==="outsourced";
+}
+
+/* ---- school: fixed weekly specials per kid, dated one-off notes, and the lunch menu fetched weekly into lunch.json ---- */
+function specialFor(p,dk){ return (p.specials||{})[String(dowOfKey(dk))]||""; }
+function schoolNotesFor(data,dk,kidId){ return (data.settings.schoolNotes||[]).filter(n=>n.date===dk&&(!n.kids?.length||!kidId||n.kids.includes(kidId))).sort((a,b)=>a.id.localeCompare(b.id)); }
+function isSchoolDay(dk){ const d=dowOfKey(dk); return d>=1&&d<=5; }
+function lunchFor(dk){ // {items:[...]} | {msg} | null when the menu file isn't there at all
+  const L=state.lunch; if(!L) return null;
+  const ws=weekKey(new Date(dk+"T12:00:00"),1);
+  if(L.weekStart!==ws) return {msg:"Lunch menu not loaded for this week"};
+  const items=L.days?.[dk]; if(!items) return {msg:"No school lunch posted"};
+  if(!items.length) return {msg:"No school lunch today"};
+  return {items};
+}
+async function loadLunch(){ // same-origin file written by .github/workflows/lunch.yml; absent until the first run
+  try{ const r=await fetch("lunch.json?v="+todayKey(new Date()),{cache:"no-store"}); if(!r.ok) throw 0; state.lunch=await r.json(); }
+  catch(e){ state.lunch=null; }
+}
+function lunchChoice(data,dk,kidId){ return data.settings.lunchChoices?.[dk]?.[kidId]||""; }
+window.setLunch=(kidId,v)=>{ const S=state.data.settings, dk=todayKey(state.now); S.lunchChoices=S.lunchChoices||{}; S.lunchChoices[dk]=S.lunchChoices[dk]||{};
+  if(S.lunchChoices[dk][kidId]===v) delete S.lunchChoices[dk][kidId]; else S.lunchChoices[dk][kidId]=v; save(); render(); };
+function schoolStripHTML(kid,dk){ // top of the Morning card on school days: today's special, the lunch menu with a Buying/Packing choice, and one-off notes
+  if(!isSchoolDay(dk)) return "";
+  const D=state.data, sp=specialFor(kid,dk), notes=schoolNotesFor(D,dk,kid.id), L=lunchFor(dk), ch=lunchChoice(D,dk,kid.id);
+  const lines=[];
+  if(sp) lines.push(`<div class="sl"><span class="ic">🏫</span><span><b>${sp}</b> today</span></div>`);
+  for(const n of notes) lines.push(`<div class="sl"><span class="ic">📌</span><span>${n.text}</span></div>`);
+  if(L) lines.push(`<div class="sl"><span class="ic">🍽</span>${L.items?`<span class="txt">${L.items.join(" · ")}</span>`:`<span class="txt muted">${L.msg}</span>`}</div>
+      <div class="sl"><span class="muted" style="font-size:.85rem">Lunch today:</span><span class="seg"><button class="${ch==="buy"?"on":""}" onclick="setLunch('${kid.id}','buy')">Buying</button><button class="${ch==="pack"?"on pack":""}" onclick="setLunch('${kid.id}','pack')">Packing</button></span></div>`);
+  return lines.length?`<div class="school">${lines.join("")}</div>`:"";
+}
+function tomorrowStripHTML(kid,dk){ // evening card: what tomorrow needs, so it can be found tonight
+  const nk=addDaysKey(dk,1); if(!isSchoolDay(nk)) return "";
+  const notes=schoolNotesFor(state.data,nk,kid.id), sp=specialFor(kid,nk);
+  if(!notes.length) return "";
+  return `<div class="school">${notes.map(n=>`<div class="sl"><span class="ic">📌</span><span><span class="muted">Tomorrow:</span> ${n.text}</span></div>`).join("")}${sp?`<div class="sl"><span class="ic">🏫</span><span><span class="muted">Tomorrow:</span> ${sp}</span></div>`:""}</div>`;
 }
 
 /* ---- dayparts: four quarters of the waking day + anytime ---- */
@@ -991,6 +1044,9 @@ function migrate(data){
   seedRewards(data);
   migrateStars(data);
   data.version="1.5";
+  if(!S.schoolNotes) S.schoolNotes=[];          // dated one-off school items (stuffy day, bring $2)
+  if(!S.lunchChoices) S.lunchChoices={};        // {date: {kidId: "buy"|"pack"}}
+  for(const p of data.people) if(p.role==="child"&&!p.specials) p.specials={};   // {1..5: "PE"} fixed for the school year
   for(const r of data.routines){
     if((r.id==="r_morn"||r.id==="r_bed") && !r.sequenceMode) r.sequenceMode="ordered";
     if((r.id==="r_wet"||r.id==="r_dry") && (!r.daypart||r.daypart==="anytime")){ r.daypart="morning"; }
@@ -1112,8 +1168,8 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.25 · local dates, day rollover";
-const state = { data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
+const BUILD="v0.26 · school strip, lunch menu";
+const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
 let storageMode="memory", warnedNoSave=false;
@@ -1207,62 +1263,79 @@ function render(){
   if(cloud.status==="signedout"){ $("#app").innerHTML=renderSignIn(); return; }
   const d=state.now, dk=todayKey(d);
   $("#dateLabel").textContent=d.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
-  const moneyPage=!!state.page && (String(state.page).startsWith("money:")||String(state.page).startsWith("rewards:"));
-  $("#tabKids").classList.toggle("on", (!state.page && state.view==="kids") || (moneyPage && state.view==="kids"));
-  $("#tabAdult").classList.toggle("on", (!state.page && state.view==="adult") || (moneyPage && state.view==="adult"));
-  $("#tabRout").classList.toggle("on", !!state.page && !moneyPage);
+  $("#tabKids").classList.toggle("on", state.view==="kids");
+  $("#tabAdult").classList.toggle("on", state.view==="adult");
+  $("#tabSettings").classList.toggle("on", state.view==="settings");
   const app=$("#app");
-  if(state.page==="routines"){ app.innerHTML=renderRoutinesPage(); return; }
   if(state.page && String(state.page).startsWith("money:")){ app.innerHTML=renderMoneyPage(String(state.page).slice(6)); return; }
   if(state.page && String(state.page).startsWith("rewards:")){ app.innerHTML=renderRewardsPage(String(state.page).slice(8)); return; }
   if(state.page && String(state.page).startsWith("task:")){ app.innerHTML=renderTaskDetail(String(state.page).slice(5)); return; }
   if(state.page && String(state.page).startsWith("tedit:")){ app.innerHTML=renderTaskEditor(String(state.page).slice(6)); return; }
   if(state.page && String(state.page).startsWith("edit:")){ app.innerHTML=renderRoutineEditor(String(state.page).slice(5)); return; }
   if(state.page){ app.innerHTML=renderRoutineDetail(state.page); return; }
-  app.innerHTML = state.view==="kids" ? renderKids(dk) : renderAdult(dk);
+  app.innerHTML = state.view==="kids" ? renderKids(dk) : state.view==="settings" ? renderSettings() : renderAdult(dk);
 }
 
 /* ---------- routines page ---------- */
 const DAY_NAMES=["Su","Mo","Tu","We","Th","Fr","Sa"];
 function daysSummary(days){ return days.length===7?"daily":days.map(d=>DAY_NAMES[d]).join(" "); }
-function renderRoutinesPage(){
+function renderSettings(){ // grown-up configuration: routines and tasks (edited often) first, general settings last
   const D=state.data, groups=["morning","midday","afternoon","evening","anytime"];
-  const adult=state.view==="adult";
-  return `<button class="backbtn" onclick="closePage()">← Back</button>
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h2 class="disp" style="margin:6px 0 12px">Routines</h2>
-      ${adult?`<span><button class="newbtn" onclick="newRoutine()">+ Routine</button> <button class="newbtn" onclick="newTask()">+ Task</button></span>`:""}
-    </div>
+  return `<h2 class="disp" style="margin:6px 0 12px">Settings</h2>
+    <div class="sect"><div class="secthead"><h3>Routines</h3><button class="newbtn" onclick="newRoutine()">+ Routine</button></div>
     ${groups.map(dp=>{
       const rs=D.routines.filter(r=>(r.daypart||"anytime")===dp);
       if(!rs.length) return "";
-      return `<div class="sect"><h3>${dp[0].toUpperCase()+dp.slice(1)}</h3>
+      return `<div class="dplabel">${dp[0].toUpperCase()+dp.slice(1)}</div>
         <div class="card">${rs.map(r=>`
           <button class="rrow" onclick="openRoutine('${r.id}')">
             <span class="rname">${r.icon||""} ${r.name}</span>
             <span class="rmeta">${r.people.map(nameOf).join(" · ")} · ${daysSummary(r.days)}
               ${r.tracking==="display"?'· <span class="badge">display</span>':""}${r.sequenceMode==="ordered"?' · <span class="badge">ordered</span>':""}</span>
             <span class="chev">›</span>
-          </button>`).join("")}</div></div>`;
-    }).join("")}
-    <div class="sect"><h3>Tasks</h3><div class="card">
+          </button>`).join("")}</div>`;
+    }).join("")}</div>
+    <div class="sect" style="margin-top:14px"><div class="secthead"><h3>Tasks</h3><button class="newbtn" onclick="newTask()">+ Task</button></div><div class="card">
       ${D.registry.map(c=>{ const inR=D.routines.find(r=>r.memberRefs?.includes(c.id));
         const meta=inR?`in ${inR.icon||""} ${inR.name}`:(c.schedule?(c.schedule.type==="fixed"?daysSummary(c.schedule.days):c.schedule.type==="once"?"one-off":`${c.schedule.count}×/${c.schedule.period}`):"") + (c.stars?` · ⭐${c.stars}`:"");
         return `<button class="rrow" onclick="openTask('${c.id}')">
           <span class="rname" style="font-family:'Atkinson Hyperlegible';font-size:.92rem">${c.name}</span>
           <span class="rmeta">${meta}</span><span class="chev">›</span></button>`; }).join("")}
-    </div></div>`;
+    </div></div>
+    <div class="sect" style="margin-top:14px"><h3>School</h3>${renderSchoolSettings()}</div>
+    <div class="sect" style="margin-top:14px"><h3>General</h3>${renderGeneralSettings()}</div>`;
 }
+function renderSchoolSettings(){ const D=state.data, kids=D.people.filter(p=>p.role==="child"), dk=todayKey(state.now);
+  const notes=(D.settings.schoolNotes||[]).filter(n=>n.date>=dk).sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id));
+  const who=n=>!n.kids?.length?"Everyone":n.kids.map(nameOf).join(", ");
+  return `<div class="card settings">
+      <div class="row" style="border-bottom:none"><span style="font-weight:700">Specials</span><span class="rmeta">same all year · shown at the top of the Morning block</span></div>
+      ${kids.map(p=>`<div class="row"><span>${p.name}</span><span class="specials">${[1,2,3,4,5].map(d=>`<label><input type="text" value="${p.specials?.[d]||""}" placeholder="–" onchange="setSpecial('${p.id}',${d},this.value)">${DAY_NAMES[d]}</label>`).join("")}</span></div>`).join("")}
+      <div class="row" style="border-bottom:none"><span style="font-weight:700">School days</span><span class="rmeta">one-offs with a date · shown that morning and the evening before</span></div>
+      ${notes.map(n=>`<div class="row"><span><b>${fmtDateShort(n.date)}</b> · ${n.text} <span class="rmeta">${who(n)}</span></span>
+        <button class="newbtn" style="border-color:#b3543f;color:#b3543f;padding:4px 10px" onclick="delSchoolNote('${n.id}')">${state.confirmDel==="note:"+n.id?"Sure?":"✕"}</button></div>`).join("")}
+      <div class="row"><span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><input type="date" id="sn_date" value="${dk}">
+          <select id="sn_who"><option value="">Everyone</option>${kids.map(p=>`<option value="${p.id}">${p.name}</option>`).join("")}</select>
+          <input type="text" id="sn_text" placeholder="Stuffy day · Ice cream day, bring $2" style="min-width:220px"></span>
+        <button class="newbtn" onclick="addSchoolNote()">+ Add</button></div>
+    </div>`;
+}
+function fmtDateShort(dk){ return new Date(dk+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}); }
+window.setSpecial=(pid,d,v)=>{ const p=state.data.people.find(x=>x.id===pid); p.specials=p.specials||{}; if(v.trim()) p.specials[String(d)]=v.trim(); else delete p.specials[String(d)]; save(); render(); };
+window.addSchoolNote=()=>{ const S=state.data.settings, date=$("#sn_date").value, text=$("#sn_text").value.trim(), kid=$("#sn_who").value;
+  if(!date||!text){ toast("Date and a note, please"); return; } S.schoolNotes=S.schoolNotes||[]; S.schoolNotes.push({id:uid("sn"),date,text,kids:kid?[kid]:[]}); save(); render(); };
+window.delSchoolNote=(id)=>{ if(state.confirmDel!=="note:"+id){ state.confirmDel="note:"+id; render(); return; }
+  const S=state.data.settings; S.schoolNotes=(S.schoolNotes||[]).filter(n=>n.id!==id); state.confirmDel=null; save(); render(); };
 function renderRoutineDetail(rid){
   const D=state.data, r=D.routines.find(x=>x.id===rid);
   if(!r) { state.page=null; return ""; }
-  const adult=state.view==="adult";
+  const adult=state.view!=="kids";
   const steps = r.members
     ? r.members.map(m=>`<li><div class="chk" style="cursor:default">· ${m.n}${m.appliesTo?` <span class="badge">${m.appliesTo.map(nameOf).join(", ")} only</span>`:""}${m.medication?' <span class="badge">no stars</span>':""}</div></li>`).join("")
     : (r.memberRefs||[]).map(cid=>{ const c=D.registry.find(x=>x.id===cid);
         return `<li><div class="chk" style="cursor:default">· ${c.name} <span class="rmeta">${c.estMin} min${c.waitMin?` + ${c.waitMin} wait`:""}</span></div></li>`; }).join("");
   return `<div style="display:flex;justify-content:space-between;align-items:center">
-      <button class="backbtn" onclick="openRoutines()">← Routines</button>
+      <button class="backbtn" onclick="${adult?"openRoutines()":"closePage()"}">${adult?"← Settings":"← Back"}</button>
       ${adult?`<button class="newbtn" onclick="editRoutine('${r.id}')">Edit</button>`:""}
     </div>
     <h2 class="disp" style="margin:6px 0 2px">${r.icon||""} ${r.name}</h2>
@@ -1277,7 +1350,7 @@ function renderRoutineEditor(id){
   const r = isNew ? {name:"",icon:"",daypart:"anytime",days:[1,2,3,4,5],people:D.people.filter(p=>p.role==="child").map(p=>p.id),
       tracking:"interactive",starMode:"none",stars:1,intention:"",members:[]}
     : D.routines.find(x=>x.id===id);
-  if(!r){ state.page="routines"; return renderRoutinesPage(); }
+  if(!r){ state.page=null; state.view="settings"; return renderSettings(); }
   const memberText=(r.members||[]).map(m=>m.n+(m.appliesTo?" "+m.appliesTo.map(p=>"@"+nameOf(p)).join(" "):"")).join("\n");
   const confirming = state.confirmDel===id;
   return `<button class="backbtn" onclick="${isNew?`openRoutines()`:`openRoutine('${id}')`}">← Cancel</button>
@@ -1311,7 +1384,7 @@ function renderTaskEditor(id){
       policy:"static",assignee:D.people.find(p=>p.role==="child")?.id,accountable:"a1",
       schedule:{type:"fixed",days:[0,1,2,3,4,5,6]},subtasks:null}
     : D.registry.find(x=>x.id===id);
-  if(!c){ state.page="routines"; return renderRoutinesPage(); }
+  if(!c){ state.page=null; state.view="settings"; return renderSettings(); }
   const inRoutine=D.routines.find(r=>r.memberRefs?.includes(id));
   const subText=(c.subtasks||[]).map(st=>st.n+(st.cadDays?` | ${st.cadDays}`:"")).join("\n");
   const kids=D.people.filter(p=>p.role==="child");
@@ -1413,7 +1486,7 @@ window.delTask=(id)=>{
   D.registry=D.registry.filter(x=>x.id!==id);
   D.instances=D.instances.filter(i=>i.cid!==id);
   for(const r of D.routines){ if(r.memberRefs) r.memberRefs=r.memberRefs.filter(x=>x!==id); }
-  state.confirmDel=null; save(); state.page="routines"; render(); toast("Task deleted");
+  state.confirmDel=null; save(); state.page=null; state.view="settings"; render(); toast("Task deleted");
 };
 window.tSchToggle=(v)=>{ const d=$("#t_dayrow"), q=$("#t_quotarow"), o=$("#t_oncerow"), e=$("#t_everyrow"); if(e) e.style.display=v==="fixed"?"":"none";
   if(d) d.style.display = v==="fixed"?"":"none";
@@ -1462,7 +1535,7 @@ window.delRoutine=(id)=>{
   const D=state.data;
   D.routines=D.routines.filter(x=>x.id!==id);
   D.instances=D.instances.filter(i=>i.rid!==id);
-  state.confirmDel=null; save(); state.page="routines"; render(); toast("Routine deleted");
+  state.confirmDel=null; save(); state.page=null; state.view="settings"; render(); toast("Routine deleted");
 };
 window.editRoutine=(id)=>{ state.confirmDel=null; state.page="edit:"+id; render(); };
 window.newRoutine=()=>{ state.confirmDel=null; state.page="edit:new"; render(); };
@@ -1509,7 +1582,7 @@ function renderTaskDetail(cid){
   }).join("");
   return `<div style="display:flex;justify-content:space-between;align-items:center">
       <button class="backbtn" onclick="closePage()">← Back</button>
-      ${state.view==="adult"?`<button class="newbtn" onclick="editTask('${c.id}')">Edit</button>`:""}
+      ${state.view!=="kids"?`<button class="newbtn" onclick="editTask('${c.id}')">Edit</button>`:""}
     </div>
     <h2 class="disp" style="margin:6px 0 2px">${c.name}</h2>
     <div class="intent" style="padding:0 0 10px">${meta}</div>
@@ -1518,7 +1591,7 @@ function renderTaskDetail(cid){
     <div class="sect" style="margin-top:14px"><h3>Log</h3><div class="card">${rows||`<div class="empty">No history yet.</div>`}</div></div>`;
 }
 window.openTask=(cid)=>{ state.page="task:"+cid; render(); };
-window.openRoutines=()=>{ state.page="routines"; render(); };
+window.openRoutines=()=>{ state.page=null; state.view="settings"; render(); };
 window.openRoutine=(id)=>{ state.page=id; render(); };
 window.closePage=()=>{ state.page=null; render(); };
 
@@ -1562,7 +1635,8 @@ function renderKidCol(kid,dk){
       + js.map(x=>jobDone(x)?`<button class="krow kdone" onclick="openTask('${x.c.id}')">✓ ${x.c.name}${x.c.stars?` <span class="starpill">⭐${x.c.stars}</span>`:""}<span class="chev">›</span></button>`
                  :mode==="later"?`<button class="rrowk later" onclick="openTask('${x.c.id}')"><span class="rk-ic">🕐</span><span class="rk-nm">${x.c.name}</span><span class="rk-meta">${daypartLabel(dp,kid)}</span><span class="chev">›</span></button>`
                  :renderTile(x.i,kid)).join("");
-    return `<div class="card dcard ${mode}"><div class="dband"><span class="dico">${dpIcon(dp)}</span><span class="dname">${dpLabel(dp,kid)}</span><span class="drange">| ${dpRange(dp)}</span></div>${rows}</div>`;
+    const strip=dp==="morning"?schoolStripHTML(kid,dk):dp==="evening"?tomorrowStripHTML(kid,dk):"";
+    return `<div class="card dcard ${mode}"><div class="dband"><span class="dico">${dpIcon(dp)}</span><span class="dname">${dpLabel(dp,kid)}</span><span class="drange">| ${dpRange(dp)}</span></div>${strip}${rows}</div>`;
   }).join("");
   const allMustDone=info.every(x=>x.done)&&must.every(jobDone);
   const todayHTML=`${cards}
@@ -1699,18 +1773,18 @@ function renderAdult(dk){
       <div class="card vq">${vq.map(renderVerify).join("")}${reqs.map(renderReviewRequest).join("")}${over.map(renderReviewOverdue).join("")}${claims.map(renderReviewClaim).join("")}${unpriced.map(renderReviewPrice).join("")}${fyi}
         ${(!nReview&&!fyi)?`<div class="empty">Nothing to review.</div>`:""}</div></div>
     ${renderAdultCatchup()}
+    ${renderAdultSchool(dk)}
     <div style="margin-top:14px">${renderAdultNow()}</div>
     <div style="margin-top:14px">${renderPlanner()}</div>
     ${renderAdultMoney()}
-    <div class="agrid" style="margin-top:14px">
-    <div>
+    <div style="margin-top:14px">
       <div class="sect"><h3>This week's minutes</h3>
         <div class="card"><table class="ledger"><tr><th>Person</th><th>Household min</th></tr>
         ${D.people.map(p=>`<tr><td>${p.name}</td><td>${led[p.id]||0}</td></tr>`).join("")}</table></div></div>
-    </div>
-    <div>
-      <div class="sect"><h3>Settings</h3>
-        <div class="card settings">
+    </div>`;
+}
+function renderGeneralSettings(){ const D=state.data;
+  return `        <div class="card settings">
           <div class="row" style="border-bottom:none"><span style="font-weight:700">People</span><span></span></div>
           ${D.people.map(p=>`<div class="row" style="flex-wrap:wrap"><span style="display:flex;align-items:center;gap:6px">
               <button class="avatar sm" onclick="setAvatar('${p.id}')" title="Set photo" style="${p.role==="child"?`--k-accent:oklch(0.78 0.19 ${p.hue??350});--k-ink:oklch(0.26 0.06 ${p.hue??350})`:""}">${p.avatar?`<img src="${p.avatar}" alt="">`:(p.name||"?")[0].toUpperCase()}</button>
@@ -1748,8 +1822,16 @@ function renderAdult(dk){
           <div class="row"><span>Cloud</span><span>${cloudStatusLine()}</span></div>
           <div class="iobtns"><button onclick="exportJSON()">Export JSON</button><button onclick="importJSON()">Import JSON</button></div>
           <div class="empty" style="text-align:center;font-size:.72rem">${BUILD}</div>
-        </div></div>
-    </div></div>`;
+        </div>`;
+}
+function renderAdultSchool(dk){ // who is buying, who needs a packed lunch, what's special today
+  if(!isSchoolDay(dk)) return "";
+  const D=state.data, kids=D.people.filter(p=>p.role==="child"), L=lunchFor(dk);
+  const rows=kids.map(k=>{ const ch=lunchChoice(D,dk,k.id), sp=specialFor(k,dk), notes=schoolNotesFor(D,dk,k.id).map(n=>n.text);
+    const bits=[sp?`🏫 ${sp}`:"", ch==="pack"?"🥪 packing lunch":ch==="buy"?"🍽 buying lunch":`<span class="rmeta">lunch not decided</span>`, ...notes.map(t=>`📌 ${t}`)].filter(Boolean);
+    return `<div class="fyirow"><b>${k.name}</b> · ${bits.join(" · ")}</div>`; }).join("");
+  const menu=L?(L.items?`<div class="fyirow rmeta">Menu: ${L.items.join(" · ")}</div>`:`<div class="fyirow rmeta">${L.msg}</div>`):"";
+  return `<div class="sect" style="margin-top:14px"><h3>School today</h3><div class="card">${rows}${menu}</div></div>`;
 }
 function renderAdultCatchup(){
   const D=state.data, dkStr=todayKey(state.now), nowDp=daypartNow(), occ=occursOn(D,state.now);
@@ -2613,11 +2695,12 @@ function cloudStatusLine(){
   generateDay(state.data, state.now);
   generateRuns(state.data, state.now);
   save(); render();
+  loadLunch().then(render);
   let shownDay=todayKey(state.now);
   const refreshNow=()=>{ state.now=new Date(); const dk=todayKey(state.now); if(dk===shownDay) return false;
     shownDay=dk; if(!state.data) return false; // new calendar day: close out yesterday, create today's occurrences, redraw
     if(todayKey(state.cursor)<dk) state.cursor=new Date(state.now);
-    generateDay(state.data,state.now); generateRuns(state.data,state.now); save(); render(); return true; };
+    generateDay(state.data,state.now); generateRuns(state.data,state.now); save(); render(); loadLunch().then(render); return true; };
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") refreshNow(); });
   window.addEventListener("pageshow",refreshNow);
   setInterval(()=>{ // live timers — but never clobber text being typed
