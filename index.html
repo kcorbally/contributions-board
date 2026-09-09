@@ -549,7 +549,7 @@ const DEFAULT_DATA = () => ({
 });
 
 /* ---- date helpers ---- */
-const todayKey = d => d.toISOString().slice(0,10);
+const todayKey = d => { const x=new Date(d), p=n=>String(n).padStart(2,"0"); return `${x.getFullYear()}-${p(x.getMonth()+1)}-${p(x.getDate())}`; }; // local calendar date, never UTC
 const dow = d => d.getDay(); // 0=Sun
 function weekKey(d, weekStart){ // key of the week containing d
   const x = new Date(d); const diff = (x.getDay() - weekStart + 7) % 7;
@@ -953,7 +953,20 @@ function dayArcHTML(){ // sun (or moon) sits on the current daypart's stop along
 }
 function daypartLabel(dp,person){ const l=dpLabel(dp,person).toLowerCase(); return dp==="evening"?"tonight":dp==="anytime"?"anytime":`this ${l}`; }
 const HUE_PRESETS=[{h:350,n:"pink"},{h:68,n:"sunny"},{h:190,n:"teal"},{h:262,n:"blue"},{h:305,n:"purple"}]; // rainbow order; no green (reserved for money)
-function migrate(data){ // saved data from earlier versions lacks dayparts, timer gates, sequence modes, photo settings, people roles/hues, allowance settings
+function repairUtcDates(data){ // v0.24 stamped dates in UTC, so anything done after 5pm Pacific landed on the next calendar day
+  if(data.dateRepair==="local-1") return;
+  const sameSlot=(a,b)=>a!==b&&a.date===b.date&&a.pid===b.pid&&(a.rid?a.rid===b.rid:(a.cid===b.cid&&!b.rid));
+  for(const i of data.instances){
+    const ts=i.completedAt||i.verifiedAt||i.startedAt; if(!ts||!i.date) continue;
+    const real=todayKey(new Date(ts)); if(real>=i.date) continue;
+    i.date=real;
+    const dup=data.instances.find(o=>sameSlot(i,o)&&!(o.completedAt||o.verifiedAt||o.startedAt)); // untouched placeholder for the real day
+    if(dup) data.instances.splice(data.instances.indexOf(dup),1);
+  }
+  data.dateRepair="local-1";
+}
+function migrate(data){
+  repairUtcDates(data); // saved data from earlier versions lacks dayparts, timer gates, sequence modes, photo settings, people roles/hues, allowance settings
   const S=data.settings;
   if(!S.photoMode) S.photoMode="optional";
   if(S.allowanceDay===undefined) S.allowanceDay=5;
@@ -1099,7 +1112,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.24 · cloud sync (Supabase)";
+const BUILD="v0.25 · local dates, day rollover";
 const state = { data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
@@ -2017,7 +2030,7 @@ window.verify=(idx)=>{ const inst=state.data.instances[idx];
   inst.note=$("#note_"+idx)?.value||""; inst.discussed=$("#disc_"+idx)?.checked||false;
   transition(state.data,inst,"verify","a1"); save(); render(); };
 window.toggleMember=(rid,pid,i)=>{ const inst=state.data.instances.find(x=>x.rid===rid&&x.pid===pid&&x.date===todayKey(state.now));
-  inst.checks[i]=!inst.checks[i];
+  inst.checks[i]=!inst.checks[i]; if(!inst.startedAt) inst.startedAt=new Date().toISOString();
   const r=state.data.routines.find(x=>x.id===rid);
   if(inst.checks.every(Boolean)) completeRoutine(state.data,inst,r);
   save(); render(); };
@@ -2600,7 +2613,15 @@ function cloudStatusLine(){
   generateDay(state.data, state.now);
   generateRuns(state.data, state.now);
   save(); render();
+  let shownDay=todayKey(state.now);
+  const refreshNow=()=>{ state.now=new Date(); const dk=todayKey(state.now); if(dk===shownDay) return false;
+    shownDay=dk; if(!state.data) return false; // new calendar day: close out yesterday, create today's occurrences, redraw
+    if(todayKey(state.cursor)<dk) state.cursor=new Date(state.now);
+    generateDay(state.data,state.now); generateRuns(state.data,state.now); save(); render(); return true; };
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") refreshNow(); });
+  window.addEventListener("pageshow",refreshNow);
   setInterval(()=>{ // live timers — but never clobber text being typed
+    if(refreshNow()) return;
     const ae=document.activeElement;
     if(ae && (ae.tagName==="TEXTAREA"||ae.tagName==="INPUT")) return;
     if(document.querySelector(".timer:not(.paused)")) render();
