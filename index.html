@@ -1039,11 +1039,15 @@ function linkChips(list){ return (list||[]).filter(l=>l.url).map(l=>`<a class="c
 function renderAdultSchool(dk){ // today at the kids' places: what's on the schedule, pickup, lunch decision, closures; the directory (teachers, links) stays in Settings
   const D=state.data, kids=D.people.filter(p=>p.role==="child");
   const rows=kids.map(k=>{ const day=kidDay(D,k,dk); if(!day.places.length&&!day.closed.length) return "";
-    const school=day.places.filter(p=>p.org.kind==="school").map(p=>`🏫 ${p.group.name||p.org.name}${groupHours(p.group,dk).end?` · out ${fmtHour(groupHours(p.group,dk).end)}${earlyEnd(p.group,dk)?" (early)":""}`:""}`);
-    const closed=day.closed.map(c=>`🚫 ${c.place.org.name} closed${c.ev.text?` · ${c.ev.text}`:""}`);
-    const ch=lunchChoice(D,dk,k.id), lunch=day.lunch?[ch==="pack"?"🥪 packing lunch":ch==="buy"?"🍽 buying lunch":`<span class="rmeta">lunch not decided</span>`]:[];
-    const bits=[...closed, ...school, ...day.items.filter(it=>!it.early).sort((a,b)=>(a.time||"").localeCompare(b.time||"")).map(it=>`${it.ic} ${it.text}`), ...lunch];
-    return `<div class="fyirow"><b>${k.name}</b> · ${bits.join(" · ")||"<span class='rmeta'>nothing on the schedule</span>"}</div>`; }).join("");
+    const mins=t=>{ if(!t) return 0; const [h,m]=t.split(":").map(Number); return h*60+m; };
+    const bits=[]; // ordered through the day: closures and the school name first, all-day items, the lunch decision, then everything with a time (pickup included) in time order
+    for(const c of day.closed) bits.push({t:-2,h:`🚫 ${c.place.org.name} closed${c.ev.text?` · ${c.ev.text}`:""}`});
+    for(const p of day.places.filter(p=>p.org.kind==="school")){ bits.push({t:-1,h:`🏫 ${p.group.name||p.org.name}`});
+      const end=groupHours(p.group,dk).end; if(end) bits.push({t:mins(end),h:`🕐 out ${fmtHour(end)}${earlyEnd(p.group,dk)?" (early)":""}`}); }
+    for(const it of day.items.filter(it=>!it.early)) bits.push({t:it.time?mins(it.time):0,h:`${it.ic} ${it.text}`});
+    if(day.lunch){ const ch=lunchChoice(D,dk,k.id); bits.push({t:1,h:ch==="pack"?"🥪 packing lunch":ch==="buy"?"🍽 buying lunch":`<span class="rmeta">lunch not decided</span>`}); }
+    bits.sort((a,b)=>a.t-b.t);
+    return `<div class="fyirow"><b>${k.name}</b> · ${bits.map(b=>b.h).join(" · ")||"<span class='rmeta'>nothing on the schedule</span>"}</div>`; }).join("");
   if(!rows) return "";
   const L=lunchFor(dk), showMenu=L&&kids.some(k=>kidDay(D,k,dk).lunch);
   const menu=showMenu?(L.items?`<div class="fyirow rmeta">Menu: ${L.items.join(" · ")}</div>`:`<div class="fyirow rmeta">${L.msg}</div>`):"";
@@ -1271,7 +1275,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.32 · block polish";
+const BUILD="v0.34 · adult recap in day order";
 const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
@@ -1443,6 +1447,8 @@ function renderPlacesSettings(){ const D=state.data, S=D.settings, kids=D.people
       ${listRows(g,"contacts","setGroupItem","delGroupItem","addGroupContact")}
       ${listRows(g,"links","setGroupItem","delGroupItem","addGroupLink")}
       ${addRow(g,"addGroupContact","addGroupLink")}
+      <div class="row" style="border-bottom:none;padding-bottom:2px"><span style="font-weight:600;font-size:.85rem">Coming up for ${g.name||"this "+k.group.toLowerCase()}</span></div>
+      ${scopedEvents(n=>n.groupId===g.id,"g:"+g.id)}
       <div class="row"><span class="sprow"><span class="rmeta who">Notes</span><input type="text" class="grow" value="${g.notes||""}" placeholder="anything about this ${k.group.toLowerCase()}" onchange="setGroup('${g.id}','notes',this.value)"></span></div>
     </div>`; };
   const orgHTML=o=>`<div class="card settings" style="margin-bottom:10px">
@@ -1452,19 +1458,35 @@ function renderPlacesSettings(){ const D=state.data, S=D.settings, kids=D.people
       ${listRows(o,"contacts","setOrgItem","delOrgItem","addOrgContact")}
       ${listRows(o,"links","setOrgItem","delOrgItem","addOrgLink")}
       ${addRow(o,"addOrgContact","addOrgLink")}
+      <div class="row" style="border-bottom:none;padding-bottom:2px"><span style="font-weight:600;font-size:.85rem">Coming up for everyone at ${o.name||"this place"}</span></div>
+      ${scopedEvents(n=>n.orgId===o.id&&!n.groupId&&!n.personId,"o:"+o.id)}
       <div class="row"><span class="sprow"><span class="rmeta who">Notes</span><input type="text" class="grow" value="${o.notes||""}" placeholder="address, office hours, parking" onchange="setOrg('${o.id}','notes',this.value)"></span></div>
       ${groupsOf(D,o.id).map(g=>groupHTML(o,g)).join("")}
       <div class="row"><span></span><button class="newbtn" onclick="addGroup('${o.id}')">+ ${K(o).group}</button></div>
     </div>`;
   const events=(S.events||[]).filter(n=>n.date>=dk).sort((a,b)=>a.date.localeCompare(b.date)||(a.time||"").localeCompare(b.time||"")||a.id.localeCompare(b.id));
   const scopeName=n=>n.personId?nameOf(n.personId):n.groupId?(groupById(D,n.groupId)?.name||"?"):(orgById(D,n.orgId)?.name||"?")+" · everyone";
+  const eventRow=(n,showScope)=>`<div class="row"><span class="sprow"><span class="rmeta who">${{note:"📌",event:"📅",closed:"🚫"}[n.kind]||"📌"} ${DAY_NAMES[dowOfKey(n.date)]}</span>
+      <input type="date" value="${n.date}" onchange="setEvent('${n.id}','date',this.value)">
+      <select onchange="setEvent('${n.id}','kind',this.value)">${[["note","note"],["event","event"],["closed","closed"]].map(([v,l])=>`<option value="${v}" ${n.kind===v?"selected":""}>${l}</option>`).join("")}</select>
+      <input type="time" step="60" value="${n.time||""}" onchange="setEvent('${n.id}','time',this.value)">
+      <input type="text" class="grow" value="${n.text||""}" placeholder="what" onchange="setEvent('${n.id}','text',this.value)">
+      <input type="text" value="${n.location||""}" placeholder="location" style="width:110px" onchange="setEvent('${n.id}','location',this.value)">
+      <input type="text" value="${n.bring||""}" placeholder="bring" style="width:100px" onchange="setEvent('${n.id}','bring',this.value)">
+      ${showScope?`<span class="rmeta">${scopeName(n)}</span>`:""}</span>${del("delEvent",n.id,"ev")}</div>`;
+  const scopedEvents=(f,scopeStr)=>{ const list=events.filter(f); const sid=scopeStr.replace(/[^a-z0-9]/gi,"_");
+    return `${list.map(n=>eventRow(n,false)).join("")}
+      <div class="row"><span class="sprow"><span class="rmeta who">+ Event</span><input type="date" id="evd_${sid}" value="${dk}">
+        <select id="evk_${sid}"><option value="note">note</option><option value="event">event</option><option value="closed">closed</option></select>
+        <input type="time" step="60" id="evt_${sid}"><input type="text" class="grow" id="evx_${sid}" placeholder="Game vs Padres · Picture day · Season party">
+        <input type="text" id="evl_${sid}" placeholder="location" style="width:110px"><input type="text" id="evb_${sid}" placeholder="bring" style="width:100px"></span>
+        <button class="newbtn" onclick="addEventScoped('${scopeStr}','${sid}')">Add</button></div>`; };
   const scopeOpts=(S.orgs||[]).flatMap(o=>[`<option value="o:${o.id}">${o.name||"(place)"} · everyone</option>`,...groupsOf(D,o.id).filter(g=>!g.ends||g.ends>=dk).map(g=>`<option value="g:${g.id}">${g.name||"(group)"}${g.level?` (${g.level})`:""}</option>`)]).concat(kids.map(k=>`<option value="p:${k.id}">${k.name} only</option>`));
-  const kindIc={note:"📌",event:"📅",closed:"🚫"};
   return `${(S.orgs||[]).map(orgHTML).join("")}
     <div class="row" style="padding:0 0 10px"><span></span><button class="newbtn" onclick="addOrg()">+ Place</button></div>
     <div class="card settings">
       <div class="row" style="border-bottom:none"><span style="font-weight:700">Events and one-offs</span><span class="rmeta">dated · shown that day and the evening before · a time puts it in that block</span></div>
-      ${events.map(n=>`<div class="row"><span>${kindIc[n.kind]||"📌"} <b>${fmtDateShort(n.date)}</b>${n.time?` ${fmtHour(n.time)}`:""} · ${n.kind==="closed"?`<i>closed</i>${n.text?` · ${n.text}`:""}`:n.text}${n.location?` · ${n.location}`:""}${n.bring?` · bring ${n.bring}`:""} <span class="rmeta">${scopeName(n)}</span></span>${del("delEvent",n.id,"ev")}</div>`).join("")}
+      ${events.map(n=>eventRow(n,true)).join("")}
       <div class="row" style="flex-wrap:wrap"><span class="sprow" style="flex:1"><input type="date" id="ev_date" value="${dk}">
           <select id="ev_scope">${scopeOpts.join("")}</select>
           <select id="ev_kind"><option value="note">note</option><option value="event">event (has a time)</option><option value="closed">closed / no school</option></select>
@@ -1504,6 +1526,11 @@ window.cycleRecurDay=(gid,id,d)=>{ const r=groupById(state.data,gid)?.recurring?
 window.addEvent=()=>{ const S=state.data.settings, date=$("#ev_date").value, text=$("#ev_text").value.trim(), sc=$("#ev_scope").value||"", kind=$("#ev_kind").value, time=$("#ev_time").value, location=$("#ev_loc").value.trim(), bring=$("#ev_bring").value.trim();
   if(!date||(!text&&kind!=="closed")){ toast("Date and a note, please"); return; } if(!sc){ toast("Add a place first"); return; }
   const [t,id]=sc.split(":"); const n={id:uid("ev"),date,text,kind,time,location,bring}; if(t==="p"){ n.personId=id; } else if(t==="g"){ n.groupId=id; n.orgId=groupById(state.data,id)?.orgId; } else n.orgId=id;
+  S.events=S.events||[]; S.events.push(n); save(); render(); };
+window.setEvent=(id,f,v)=>{ const n=(state.data.settings.events||[]).find(x=>x.id===id); if(!n) return; n[f]=trimv(v); save(); render(); };
+window.addEventScoped=(scopeStr,sid)=>{ const S=state.data.settings, date=$("#evd_"+sid).value, kind=$("#evk_"+sid).value, time=$("#evt_"+sid).value, text=$("#evx_"+sid).value.trim(), location=$("#evl_"+sid).value.trim(), bring=$("#evb_"+sid).value.trim();
+  if(!date||(!text&&kind!=="closed")){ toast("Date and a note, please"); return; }
+  const [t,id]=scopeStr.split(":"); const n={id:uid("ev"),date,text,kind,time,location,bring}; if(t==="g"){ n.groupId=id; n.orgId=groupById(state.data,id)?.orgId; } else n.orgId=id;
   S.events=S.events||[]; S.events.push(n); save(); render(); };
 window.delEvent=(id)=>confirmThen("ev",id,()=>{ const S=state.data.settings; S.events=(S.events||[]).filter(n=>n.id!==id); });
 window.addSchoolNote=()=>{ const S=state.data.settings, date=$("#sn_date").value, text=$("#sn_text").value.trim(), kid=$("#sn_who").value;
