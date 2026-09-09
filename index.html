@@ -1000,11 +1000,13 @@ function kidDay(D,kid,dk){ // what this day holds at the kid's places: items car
   const all=kidPlaces(D,kid.id,dk), places=[], closed=[], items=[];
   for(const p of all){ const c=closedFor(D,dk,p); if(c.length){ closed.push({place:p,ev:c[0]}); continue; } if(groupOpen(p.group,dk,p.org.kind)) places.push(p); }
   for(const p of places){
-    for(const r of p.group.recurring||[]) if(r.name&&recurOn(r,dk)) items.push({dp:dpOfTime(r.time),ic:p.org.kind==="school"?"🏫":p.org.kind==="sports"?"⚾":p.org.kind==="dance"?"🩰":"📍",text:`<b>${r.name}</b>${r.time?` ${fmtHour(r.time)}`:" today"}${p.group.room&&r.time?` · ${p.group.room}`:""}${bringTxt(r.bring)}`,name:r.name,bring:r.bring,time:r.time});
+    const who=p.org.kind==="school"?"":`${p.group.name||p.org.name} `;
+    for(const r of p.group.recurring||[]) if(r.name&&recurOn(r,dk)) items.push({dp:dpOfTime(r.time),ic:p.org.kind==="school"?"🏫":p.org.kind==="sports"?"⚾":p.org.kind==="dance"?"🩰":"📍",text:`${who}<b>${r.name}</b>${r.time?` ${fmtHour(r.time)}`:" today"}${p.group.room&&r.time?` · ${p.group.room}`:""}${bringTxt(r.bring)}`,name:r.name,bring:r.bring,time:r.time,place:p});
     const e=earlyEnd(p.group,dk); if(e) items.push({dp:null,ic:"🕐",text:`Pickup at <b>${fmtHour(e)}</b> today`,early:e});
   }
   for(const n of eventsFor(D,dk,kid.id)){ if(n.kind==="closed") continue;
-    items.push({dp:dpOfTime(n.time),ic:n.kind==="event"?"📅":"📌",text:`${n.time?`<b>${fmtHour(n.time)}</b> `:""}${n.text}${n.location?` · ${n.location}`:""}${bringTxt(n.bring)}`,event:n,bring:n.bring,time:n.time}); }
+    const p=n.groupId?places.find(x=>x.group.id===n.groupId):places.find(x=>x.org.id===n.orgId), who=p&&p.org.kind!=="school"?`${p.group.name||p.org.name} `:"";
+    items.push({dp:dpOfTime(n.time),ic:n.kind==="event"?"📅":"📌",text:`${who}${n.time?`<b>${fmtHour(n.time)}</b> `:""}${n.text}${n.location?` · ${n.location}`:""}${bringTxt(n.bring)}`,event:n,bring:n.bring,time:n.time,place:p}); }
   const lunch=places.some(p=>p.org.lunch)?lunchFor(dk):null;
   return { places, closed, items, lunch };
 }
@@ -1028,15 +1030,14 @@ function placesStripHTML(kid,dk,dp){ // per daypart card: Morning holds all-day 
 }
 function contactChips(list){ return (list||[]).filter(c=>c.name||c.phone||c.email).map(c=>`<span class="chip">${c.name||c.role||""}${c.role&&c.name?` <i>${c.role}</i>`:""}${c.phone?` <a href="tel:${c.phone.replace(/[^\d+]/g,"")}">${c.phone}</a>`:""}${c.email?` <a href="mailto:${c.email}">${c.email}</a>`:""}</span>`).join(""); }
 function linkChips(list){ return (list||[]).filter(l=>l.url).map(l=>`<a class="chip" href="${l.url.match(/^https?:/)?l.url:"https://"+l.url}" target="_blank" rel="noopener">${l.label||l.url}</a>`).join(""); }
-function renderAdultSchool(dk){ // today at the kids' places: where, what's on, pickup, lunch decision, notes, and the links and contacts for each
+function renderAdultSchool(dk){ // today at the kids' places: what's on the schedule, pickup, lunch decision, closures; the directory (teachers, links) stays in Settings
   const D=state.data, kids=D.people.filter(p=>p.role==="child");
   const rows=kids.map(k=>{ const day=kidDay(D,k,dk); if(!day.places.length&&!day.closed.length) return "";
-    const where=day.places.map(p=>`${p.org.name}${p.group.name?` · ${p.group.name}`:""}${p.group.level?` (${p.group.level})`:""}${p.enr.dot?` · ${p.org.kind==="school"?"dot":"#"} ${p.enr.dot}`:""}${groupHours(p.group,dk).end?` · out ${fmtHour(groupHours(p.group,dk).end)}${earlyEnd(p.group,dk)?" (early)":""}`:""}`)
-      .concat(day.closed.map(c=>`🚫 ${c.place.org.name} closed${c.ev.text?` · ${c.ev.text}`:""}`)).join("<br>");
+    const school=day.places.filter(p=>p.org.kind==="school").map(p=>`🏫 ${p.group.name||p.org.name}${groupHours(p.group,dk).end?` · out ${fmtHour(groupHours(p.group,dk).end)}${earlyEnd(p.group,dk)?" (early)":""}`:""}`);
+    const closed=day.closed.map(c=>`🚫 ${c.place.org.name} closed${c.ev.text?` · ${c.ev.text}`:""}`);
     const ch=lunchChoice(D,dk,k.id), lunch=day.lunch?[ch==="pack"?"🥪 packing lunch":ch==="buy"?"🍽 buying lunch":`<span class="rmeta">lunch not decided</span>`]:[];
-    const bits=[...day.items.map(it=>`${it.ic} ${it.text}`), ...lunch];
-    const chips=day.places.map(p=>linkChips(p.org.links)+linkChips(p.group.links)+contactChips(p.group.contacts)).join("");
-    return `<div class="fyirow"><b>${k.name}</b> <span class="rmeta">${where}</span><br>${bits.join(" · ")||"<span class='rmeta'>nothing special</span>"}${chips?`<div class="chips">${chips}</div>`:""}</div>`; }).join("");
+    const bits=[...closed, ...school, ...day.items.filter(it=>!it.early).sort((a,b)=>(a.time||"").localeCompare(b.time||"")).map(it=>`${it.ic} ${it.text}`), ...lunch];
+    return `<div class="fyirow"><b>${k.name}</b> · ${bits.join(" · ")||"<span class='rmeta'>nothing on the schedule</span>"}</div>`; }).join("");
   if(!rows) return "";
   const L=lunchFor(dk), showMenu=L&&kids.some(k=>kidDay(D,k,dk).lunch);
   const menu=showMenu?(L.items?`<div class="fyirow rmeta">Menu: ${L.items.join(" · ")}</div>`:`<div class="fyirow rmeta">${L.msg}</div>`):"";
@@ -1264,7 +1265,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.30 · Places (schema v1.9)";
+const BUILD="v0.31 · adult schedule card";
 const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
