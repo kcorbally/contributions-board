@@ -1001,7 +1001,7 @@ function kidDay(D,kid,dk){ // what this day holds at the kid's places: items car
   for(const p of all){ const c=closedFor(D,dk,p); if(c.length){ closed.push({place:p,ev:c[0]}); continue; } if(groupOpen(p.group,dk,p.org.kind)) places.push(p); }
   for(const p of places){
     const who=p.org.kind==="school"?"":`${p.group.name||p.org.name} `;
-    for(const r of p.group.recurring||[]) if(r.name&&recurOn(r,dk)) items.push({dp:dpOfTime(r.time),ic:p.org.kind==="school"?"🏫":p.org.kind==="sports"?"⚾":p.org.kind==="dance"?"🩰":"📍",text:`${who}<b>${r.name}</b>${r.time?` ${fmtHour(r.time)}`:" today"}${p.group.room&&r.time?` · ${p.group.room}`:""}${bringTxt(r.bring)}`,name:r.name,bring:r.bring,time:r.time,place:p});
+    for(const r of p.group.recurring||[]) if(recurOn(r,dk)) items.push({dp:dpOfTime(r.time),ic:p.org.kind==="school"?"🏫":p.org.kind==="sports"?"⚾":p.org.kind==="dance"?"🩰":"📍",text:`${who}<b>${r.name||(p.org.kind==="school"?"Special":"Practice")}</b>${r.time?` ${fmtHour(r.time)}`:" today"}${p.group.room&&r.time?` · ${p.group.room}`:""}${bringTxt(r.bring)}`,name:r.name||(p.org.kind==="school"?"Special":"Practice"),bring:r.bring,time:r.time,place:p});
     const e=earlyEnd(p.group,dk); if(e) items.push({dp:null,ic:"🕐",text:`Pickup at <b>${fmtHour(e)}</b> today`,early:e});
   }
   for(const n of eventsFor(D,dk,kid.id)){ if(n.kind==="closed") continue;
@@ -1265,7 +1265,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.31 · adult schedule card";
+const BUILD="v0.31 · adult schedule card, unnamed practices";
 const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
@@ -1489,7 +1489,7 @@ window.delGroupItem=(id)=>confirmThen("item",id,()=>{ for(const g of state.data.
 window.addEnr=(groupId,personId)=>{ const S=state.data.settings; S.enrollments=S.enrollments||[]; S.enrollments.push({id:uid("enr"),groupId,personId,dot:"",notes:""}); save(); render(); };
 window.setEnr=(id,f,v)=>{ const e=(state.data.settings.enrollments||[]).find(x=>x.id===id); if(!e) return; e[f]=trimv(v); save(); render(); };
 window.delEnr=(id)=>confirmThen("enr",id,()=>{ const S=state.data.settings; S.enrollments=S.enrollments.filter(e=>e.id!==id); });
-window.addRecur=(gid)=>{ const g=groupById(state.data,gid); if(!g) return; g.recurring=g.recurring||[]; g.recurring.push({id:uid("rc"),name:"",days:{},time:"",bring:""}); save(); render(); };
+window.addRecur=(gid)=>{ const g=groupById(state.data,gid); if(!g) return; const o=orgById(state.data,g.orgId); g.recurring=g.recurring||[]; g.recurring.push({id:uid("rc"),name:o?.kind==="school"?"":"Practice",days:{},time:"",bring:""}); save(); render(); };
 window.delRecur=(id)=>confirmThen("rec",id,()=>{ for(const g of state.data.settings.groups||[]) g.recurring=(g.recurring||[]).filter(x=>x.id!==id); });
 window.setRecur=(gid,id,f,v)=>{ const r=groupById(state.data,gid)?.recurring?.find(x=>x.id===id); if(!r) return; r[f]=trimv(v); save(); render(); };
 window.cycleRecurDay=(gid,id,d)=>{ const r=groupById(state.data,gid)?.recurring?.find(x=>x.id===id); if(!r) return; r.days=r.days||{};
