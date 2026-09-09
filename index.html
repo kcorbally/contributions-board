@@ -150,6 +150,13 @@ button.rrowk{display:flex;align-items:center;gap:10px;width:100%;text-align:left
 .hours label{display:flex;flex-direction:column;font-size:.7rem;color:var(--muted);gap:2px}
 .hours input[type=time]{font-size:.8rem;padding:2px 4px}
 .grp{margin:6px 10px 10px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fafbf9}
+.grp.past{background:#f3f4f1}
+.sprow .grow{flex:1;min-width:140px;width:auto}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chip{font-size:.75rem;border:1px solid var(--line);border-radius:999px;padding:2px 9px;background:#fff;color:var(--ink)}
+.chip i{color:var(--muted);font-style:normal}
+.chip a{color:var(--adult);text-decoration:none;margin-left:4px}
+a.chip{color:var(--adult)}
 .settings .row>.sprow{flex:1}
 .kidcfg{flex-basis:100%;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding-top:8px}
 .kidcfg .wk{display:flex;gap:6px}
@@ -948,30 +955,31 @@ function needsAccountable(data,c){ // schema: accountable is required for child 
   return involvesKid(data,c) || c.ownerType==="outsourced";
 }
 
-/* ---- places: organizations (school, league, studio) → groups (class, team) → enrollments (a kid in a group); facts live at the level that shares them ---- */
+/* ---- places (schema v1.9): organizations → groups (class, team) → enrollments; facts live at the level that shares them ---- */
 function orgById(D,id){ return (D.settings.orgs||[]).find(o=>o.id===id); }
 function groupById(D,id){ return (D.settings.groups||[]).find(g=>g.id===id); }
 function groupsOf(D,orgId){ return (D.settings.groups||[]).filter(g=>g.orgId===orgId); }
 function enrollmentsOf(D,personId){ return (D.settings.enrollments||[]).filter(e=>e.personId===personId); }
 function membersOf(D,groupId){ return (D.settings.enrollments||[]).filter(e=>e.groupId===groupId); }
-function kidPlaces(D,kidId){ // [{org,group,enr}] for everything a kid belongs to
-  return enrollmentsOf(D,kidId).map(e=>{ const g=groupById(D,e.groupId), o=g&&orgById(D,g.orgId); return o&&g?{org:o,group:g,enr:e}:null; }).filter(Boolean);
+function groupActive(g,dk){ return (!g.starts||dk>=g.starts)&&(!g.ends||dk<=g.ends); } // season window
+function kidPlaces(D,kidId,dk){ // [{org,group,enr}] for everything a kid belongs to (in season on dk, when given)
+  return enrollmentsOf(D,kidId).map(e=>{ const g=groupById(D,e.groupId), o=g&&orgById(D,g.orgId); return o&&g&&(!dk||groupActive(g,dk))?{org:o,group:g,enr:e}:null; }).filter(Boolean);
 }
 function altWeek(anchor,dk){ // every-other-week parity counted from the week of the anchor date (weeks run Monday to Friday)
   const a=weekKey(new Date((anchor||dk)+"T12:00:00"),1), w=weekKey(new Date(dk+"T12:00:00"),1);
   return Math.round(daysBetween(a,w)/7)%2===0;
 }
-function specialOn(sp,dk){ const m=(sp.days||{})[String(dowOfKey(dk))]; return m==="every"||(m==="alt"&&altWeek(sp.anchor,dk)); }
-function kidSpecials(D,kidId,dk){ const out=[]; for(const {group} of kidPlaces(D,kidId)) for(const sp of group.specials||[]) if(sp.name&&specialOn(sp,dk)) out.push(sp.name); return out; }
-function orgHours(org,dk){ return (org.hours||{})[String(dowOfKey(dk))]||{}; }
-function orgOpen(org,dk){ const d=dowOfKey(dk); if(d<1||d>5) return false; const h=org.hours||{}; const any=Object.values(h).some(x=>x.start||x.end); return !any||!!(h[String(d)]?.start||h[String(d)]?.end); }
-function usualEnd(org){ const c={}; for(const d of [1,2,3,4,5]){ const e=(org.hours||{})[String(d)]?.end; if(e) c[e]=(c[e]||0)+1; } return Object.entries(c).sort((a,b)=>b[1]-a[1])[0]?.[0]||""; }
-function earlyEnd(org,dk){ const e=orgHours(org,dk).end, u=usualEnd(org); return e&&u&&e!==u?e:""; } // only when today's end differs from the usual one
-function placeNotesFor(D,dk,kidId){ // dated one-offs that apply to this kid: org-wide, their group, or them personally
-  const places=kidPlaces(D,kidId), orgIds=places.map(p=>p.org.id), groupIds=places.map(p=>p.group.id);
-  return (D.settings.orgNotes||[]).filter(n=>n.date===dk&&(n.personId?n.personId===kidId:n.groupId?groupIds.includes(n.groupId):orgIds.includes(n.orgId))).sort((a,b)=>a.id.localeCompare(b.id));
+function recurOn(r,dk){ const m=(r.days||{})[String(dowOfKey(dk))]; return m==="every"||(m==="alt"&&altWeek(r.anchor,dk)); }
+function groupHours(g,dk){ return (g.hours||{})[String(dowOfKey(dk))]||{}; }
+function groupOpen(g,dk,kind){ const d=dowOfKey(dk); const h=g.hours||{}; const any=Object.values(h).some(x=>x.start||x.end); if(!any) return kind==="school"?(d>=1&&d<=5):true; return !!(h[String(d)]?.start||h[String(d)]?.end); }
+function usualEnd(g){ const c={}; for(const d of [0,1,2,3,4,5,6]){ const e=(g.hours||{})[String(d)]?.end; if(e) c[e]=(c[e]||0)+1; } return Object.entries(c).sort((a,b)=>b[1]-a[1])[0]?.[0]||""; }
+function earlyEnd(g,dk){ const e=groupHours(g,dk).end, u=usualEnd(g); return e&&u&&e!==u?e:""; } // only when today's end differs from the group's usual one
+function eventsFor(D,dk,kidId){ // dated one-offs that apply to this kid: org-wide, their group, or them personally
+  const places=kidPlaces(D,kidId,dk), orgIds=places.map(p=>p.org.id), groupIds=places.map(p=>p.group.id);
+  return (D.settings.events||[]).filter(n=>n.date===dk&&(n.personId?n.personId===kidId:n.groupId?groupIds.includes(n.groupId):orgIds.includes(n.orgId))).sort((a,b)=>(a.time||"").localeCompare(b.time||"")||a.id.localeCompare(b.id));
 }
-function isSchoolDay(dk){ const d=dowOfKey(dk); return d>=1&&d<=5; }
+function closedFor(D,dk,place){ return (D.settings.events||[]).filter(n=>n.date===dk&&n.kind==="closed"&&(n.groupId?n.groupId===place.group.id:n.orgId===place.org.id)); }
+function dpOfTime(t){ if(!t) return null; const [h,m]=t.split(":").map(Number), mm=h*60+m; let cur="morning"; for(const d of dayparts()){ const [hh,m2]=d.start.split(":").map(Number); if(mm>=hh*60+m2) cur=d.key; } return cur; }
 function lunchFor(dk){ // {items:[...]} | {msg} | null when the menu file isn't there at all
   const L=state.lunch; if(!L) return null;
   const ws=weekKey(new Date(dk+"T12:00:00"),1);
@@ -987,28 +995,52 @@ async function loadLunch(){ // same-origin file written by .github/workflows/lun
 function lunchChoice(data,dk,kidId){ return data.settings.lunchChoices?.[dk]?.[kidId]||""; }
 window.setLunch=(kidId,v)=>{ const S=state.data.settings, dk=todayKey(state.now); S.lunchChoices=S.lunchChoices||{}; S.lunchChoices[dk]=S.lunchChoices[dk]||{};
   if(S.lunchChoices[dk][kidId]===v) delete S.lunchChoices[dk][kidId]; else S.lunchChoices[dk][kidId]=v; save(); render(); };
-function kidDay(D,kid,dk){ // everything that is different about this day at the kid's places (static facts stay on the adult side)
-  const places=kidPlaces(D,kid.id).filter(p=>orgOpen(p.org,dk));
-  return { places, specials:kidSpecials(D,kid.id,dk), notes:placeNotesFor(D,dk,kid.id),
-    early:places.map(p=>({org:p.org,end:earlyEnd(p.org,dk)})).filter(x=>x.end),
-    lunch:places.some(p=>p.org.lunch)?lunchFor(dk):null };
+const bringTxt=b=>b?` <span class="muted">· bring ${b}</span>`:"";
+function kidDay(D,kid,dk){ // what this day holds at the kid's places: items carry a daypart when they have a time, else they are all-day
+  const all=kidPlaces(D,kid.id,dk), places=[], closed=[], items=[];
+  for(const p of all){ const c=closedFor(D,dk,p); if(c.length){ closed.push({place:p,ev:c[0]}); continue; } if(groupOpen(p.group,dk,p.org.kind)) places.push(p); }
+  for(const p of places){
+    for(const r of p.group.recurring||[]) if(r.name&&recurOn(r,dk)) items.push({dp:dpOfTime(r.time),ic:p.org.kind==="school"?"🏫":p.org.kind==="sports"?"⚾":p.org.kind==="dance"?"🩰":"📍",text:`<b>${r.name}</b>${r.time?` ${fmtHour(r.time)}`:" today"}${p.group.room&&r.time?` · ${p.group.room}`:""}${bringTxt(r.bring)}`,name:r.name,bring:r.bring,time:r.time});
+    const e=earlyEnd(p.group,dk); if(e) items.push({dp:null,ic:"🕐",text:`Pickup at <b>${fmtHour(e)}</b> today`,early:e});
+  }
+  for(const n of eventsFor(D,dk,kid.id)){ if(n.kind==="closed") continue;
+    items.push({dp:dpOfTime(n.time),ic:n.kind==="event"?"📅":"📌",text:`${n.time?`<b>${fmtHour(n.time)}</b> `:""}${n.text}${n.location?` · ${n.location}`:""}${bringTxt(n.bring)}`,event:n,bring:n.bring,time:n.time}); }
+  const lunch=places.some(p=>p.org.lunch)?lunchFor(dk):null;
+  return { places, closed, items, lunch };
 }
-function schoolStripHTML(kid,dk){ // top of the Morning card: today's specials, one-off notes, an early pickup, the lunch menu with a Buying/Packing choice
-  const D=state.data, day=kidDay(D,kid,dk); if(!day.places.length) return "";
-  const ch=lunchChoice(D,dk,kid.id), lines=[];
-  if(day.specials.length) lines.push(`<div class="sl"><span class="ic">🏫</span><span><b>${day.specials.join(" + ")}</b> today</span></div>`);
-  for(const n of day.notes) lines.push(`<div class="sl"><span class="ic">📌</span><span>${n.text}</span></div>`);
-  for(const e of day.early) lines.push(`<div class="sl"><span class="ic">🕐</span><span>Pickup at <b>${fmtHour(e.end)}</b> today</span></div>`);
-  if(day.lunch) lines.push(`<div class="sl"><span class="ic">🍽</span>${day.lunch.items?`<span class="txt">${day.lunch.items.join(" · ")}</span>`:`<span class="txt muted">${day.lunch.msg}</span>`}</div>
-      <div class="sl"><span class="muted" style="font-size:.85rem">Lunch today:</span><span class="seg"><button class="${ch==="buy"?"on":""}" onclick="setLunch('${kid.id}','buy')">Buying</button><button class="${ch==="pack"?"on":""}" onclick="setLunch('${kid.id}','pack')">Packing</button></span></div>`);
+function placesStripHTML(kid,dk,dp){ // per daypart card: Morning holds all-day items, closures, pickup and lunch; timed items land in their own block
+  const D=state.data, day=kidDay(D,kid,dk), lines=[];
+  if(dp==="morning"){
+    for(const c of day.closed) lines.push(`<div class="sl"><span class="ic">🚫</span><span>No ${c.place.org.kind==="school"?"school":c.place.group.name} today${c.ev.text?` · ${c.ev.text}`:""}</span></div>`);
+    for(const it of day.items.filter(x=>!x.dp)) lines.push(`<div class="sl"><span class="ic">${it.ic}</span><span class="txt">${it.text}</span></div>`);
+    if(day.lunch){ const ch=lunchChoice(D,dk,kid.id);
+      lines.push(`<div class="sl"><span class="ic">🍽</span>${day.lunch.items?`<span class="txt">${day.lunch.items.join(" · ")}</span>`:`<span class="txt muted">${day.lunch.msg}</span>`}</div>
+      <div class="sl"><span class="muted" style="font-size:.85rem">Lunch today:</span><span class="seg"><button class="${ch==="buy"?"on":""}" onclick="setLunch('${kid.id}','buy')">Buying</button><button class="${ch==="pack"?"on":""}" onclick="setLunch('${kid.id}','pack')">Packing</button></span></div>`); }
+  }
+  for(const it of day.items.filter(x=>x.dp===dp)) lines.push(`<div class="sl"><span class="ic">${it.ic}</span><span class="txt">${it.text}</span></div>`);
+  if(dp==="evening"){ // tonight's preview of tomorrow: closures, events, early pickup, anything to bring
+    const nk=addDaysKey(dk,1), nd=kidDay(D,kid,nk), t=`<span class="muted">Tomorrow:</span>`;
+    for(const c of nd.closed) lines.push(`<div class="sl"><span class="ic">🚫</span><span>${t} no ${c.place.org.kind==="school"?"school":c.place.group.name}</span></div>`);
+    for(const it of nd.items.filter(x=>x.event||x.early||x.bring)) lines.push(`<div class="sl"><span class="ic">${it.ic}</span><span class="txt">${t} ${it.text.replace(" today","")}</span></div>`);
+    const sp=nd.items.filter(x=>x.name&&!x.bring&&!x.time).map(x=>x.name); if(sp.length) lines.push(`<div class="sl"><span class="ic">🏫</span><span>${t} ${sp.join(" + ")}</span></div>`);
+  }
   return lines.length?`<div class="school">${lines.join("")}</div>`:"";
 }
-function tomorrowStripHTML(kid,dk){ // evening card: what tomorrow needs, so it can be found tonight
-  const nk=addDaysKey(dk,1), day=kidDay(state.data,kid,nk); if(!day.places.length||(!day.notes.length&&!day.early.length)) return "";
-  const t=`<span class="muted">Tomorrow:</span>`;
-  return `<div class="school">${day.notes.map(n=>`<div class="sl"><span class="ic">📌</span><span>${t} ${n.text}</span></div>`).join("")}
-    ${day.early.map(e=>`<div class="sl"><span class="ic">🕐</span><span>${t} pickup at ${fmtHour(e.end)}</span></div>`).join("")}
-    ${day.specials.length?`<div class="sl"><span class="ic">🏫</span><span>${t} ${day.specials.join(" + ")}</span></div>`:""}</div>`;
+function contactChips(list){ return (list||[]).filter(c=>c.name||c.phone||c.email).map(c=>`<span class="chip">${c.name||c.role||""}${c.role&&c.name?` <i>${c.role}</i>`:""}${c.phone?` <a href="tel:${c.phone.replace(/[^\d+]/g,"")}">${c.phone}</a>`:""}${c.email?` <a href="mailto:${c.email}">${c.email}</a>`:""}</span>`).join(""); }
+function linkChips(list){ return (list||[]).filter(l=>l.url).map(l=>`<a class="chip" href="${l.url.match(/^https?:/)?l.url:"https://"+l.url}" target="_blank" rel="noopener">${l.label||l.url}</a>`).join(""); }
+function renderAdultSchool(dk){ // today at the kids' places: where, what's on, pickup, lunch decision, notes, and the links and contacts for each
+  const D=state.data, kids=D.people.filter(p=>p.role==="child");
+  const rows=kids.map(k=>{ const day=kidDay(D,k,dk); if(!day.places.length&&!day.closed.length) return "";
+    const where=day.places.map(p=>`${p.org.name}${p.group.name?` · ${p.group.name}`:""}${p.group.level?` (${p.group.level})`:""}${p.enr.dot?` · ${p.org.kind==="school"?"dot":"#"} ${p.enr.dot}`:""}${groupHours(p.group,dk).end?` · out ${fmtHour(groupHours(p.group,dk).end)}${earlyEnd(p.group,dk)?" (early)":""}`:""}`)
+      .concat(day.closed.map(c=>`🚫 ${c.place.org.name} closed${c.ev.text?` · ${c.ev.text}`:""}`)).join("<br>");
+    const ch=lunchChoice(D,dk,k.id), lunch=day.lunch?[ch==="pack"?"🥪 packing lunch":ch==="buy"?"🍽 buying lunch":`<span class="rmeta">lunch not decided</span>`]:[];
+    const bits=[...day.items.map(it=>`${it.ic} ${it.text}`), ...lunch];
+    const chips=day.places.map(p=>linkChips(p.org.links)+linkChips(p.group.links)+contactChips(p.group.contacts)).join("");
+    return `<div class="fyirow"><b>${k.name}</b> <span class="rmeta">${where}</span><br>${bits.join(" · ")||"<span class='rmeta'>nothing special</span>"}${chips?`<div class="chips">${chips}</div>`:""}</div>`; }).join("");
+  if(!rows) return "";
+  const L=lunchFor(dk), showMenu=L&&kids.some(k=>kidDay(D,k,dk).lunch);
+  const menu=showMenu?(L.items?`<div class="fyirow rmeta">Menu: ${L.items.join(" · ")}</div>`:`<div class="fyirow rmeta">${L.msg}</div>`):"";
+  return `<div class="sect" style="margin-top:14px"><h3>Today at their places</h3><div class="card">${rows}${menu}</div></div>`;
 }
 
 /* ---- dayparts: four quarters of the waking day + anytime ---- */
@@ -1073,6 +1105,16 @@ function migratePlaces(data){ // schema v1.8: per-kid specials and schoolNotes b
   for(const n of S.schoolNotes||[]){ const note={id:n.id,date:n.date,text:n.text,orgId:org.id}; if(n.kids?.length===1){ const kid=kids.find(k=>k.id===n.kids[0]); if(kid) note.groupId=groupFor(kid).id; } S.orgNotes.push(note); }
   delete S.schoolNotes;
 }
+function migratePlaces19(data){ // v1.8 → v1.9: hours move from the place to its groups, specials become recurring, grade becomes the group's level, notes become events
+  const S=data.settings; S.events=S.events||[];
+  for(const o of S.orgs||[]){ o.links=o.links||[]; o.contacts=o.contacts||[];
+    if(o.hours){ for(const g of groupsOf(data,o.id)) if(!g.hours||!Object.keys(g.hours).length) g.hours=JSON.parse(JSON.stringify(o.hours)); delete o.hours; } }
+  for(const g of S.groups||[]){ g.links=g.links||[]; g.contacts=g.contacts||[]; g.recurring=g.recurring||[]; g.level=g.level||""; g.starts=g.starts||""; g.ends=g.ends||"";
+    if(g.lead){ g.contacts.unshift({id:uid("c"),name:g.lead,role:"teacher",phone:"",email:""}); delete g.lead; }
+    if(g.specials){ for(const sp of g.specials) g.recurring.push({id:sp.id,name:sp.name,days:sp.days||{},anchor:sp.anchor,time:"",bring:""}); delete g.specials; } }
+  for(const e of S.enrollments||[]){ if(e.grade){ const g=groupById(data,e.groupId); if(g&&!g.level) g.level=e.grade; delete e.grade; } }
+  if(S.orgNotes){ for(const n of S.orgNotes) S.events.push({...n,kind:"note",time:"",location:"",bring:""}); delete S.orgNotes; }
+}
 function migrate(data){
   repairUtcDates(data); // saved data from earlier versions lacks dayparts, timer gates, sequence modes, photo settings, people roles/hues, allowance settings
   const S=data.settings;
@@ -1100,7 +1142,7 @@ function migrate(data){
   migrateStars(data);
   data.version="1.5";
   if(!S.lunchChoices) S.lunchChoices={};        // {date: {kidId: "buy"|"pack"}}
-  migratePlaces(data);
+  migratePlaces(data); migratePlaces19(data);
   for(const r of data.routines){
     if((r.id==="r_morn"||r.id==="r_bed") && !r.sequenceMode) r.sequenceMode="ordered";
     if((r.id==="r_wet"||r.id==="r_dry") && (!r.daypart||r.daypart==="anytime")){ r.daypart="morning"; }
@@ -1222,7 +1264,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.29 · Places (schema v1.8)";
+const BUILD="v0.30 · Places (schema v1.9)";
 const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
@@ -1361,71 +1403,102 @@ function renderSettings(){ // grown-up configuration: routines and tasks (edited
 }
 function renderPlacesSettings(){ const D=state.data, S=D.settings, kids=D.people.filter(p=>p.role==="child"), dk=todayKey(state.now);
   const del=(fn,id,key)=>`<button class="newbtn del" onclick="${fn}('${id}')">${state.confirmDel===key+":"+id?"Sure?":"✕"}</button>`;
-  const orgHTML=o=>`<div class="card settings" style="margin-bottom:10px">
-      <div class="row"><span class="sprow"><input type="text" value="${o.name||""}" placeholder="Richland Elementary" style="width:200px;font-weight:700" onchange="setOrg('${o.id}','name',this.value)">
-          <select onchange="setOrg('${o.id}','kind',this.value)">${[["school","school"],["sports","sports"],["dance","dance"],["other","other"]].map(([v,l])=>`<option value="${v}" ${o.kind===v?"selected":""}>${l}</option>`).join("")}</select>
-          ${o.kind==="school"?`<label class="rmeta"><input type="checkbox" ${o.lunch?"checked":""} onchange="setOrg('${o.id}','lunch',this.checked)"> lunch menu (lunch.json)</label>`:""}</span>
-        ${del("delOrg",o.id,"org")}</div>
-      <div class="row"><span class="rmeta who">Hours</span><span class="hours">${[1,2,3,4,5].map(d=>`<label>${DAY_NAMES[d]}<input type="time" value="${o.hours?.[d]?.start||""}" onchange="setOrgHours('${o.id}',${d},'start',this.value)"><input type="time" value="${o.hours?.[d]?.end||""}" onchange="setOrgHours('${o.id}',${d},'end',this.value)"></label>`).join("")}</span></div>
-      <div class="row"><span class="rmeta who">Notes</span><input type="text" value="${o.notes||""}" placeholder="address, phone, office hours" style="flex:1" onchange="setOrg('${o.id}','notes',this.value)"></div>
-      ${groupsOf(D,o.id).map(g=>groupHTML(o,g)).join("")}
-      <div class="row"><span></span><button class="newbtn" onclick="addGroup('${o.id}')">+ ${o.kind==="school"?"Class":o.kind==="sports"?"Team":"Group"}</button></div>
-    </div>`;
-  const groupHTML=(o,g)=>{ const mem=membersOf(D,g.id), free=kids.filter(k=>!mem.some(e=>e.personId===k.id));
+  const KIND={school:{group:"Class",lead:"teacher",room:"room",level:"grade",num:"dot"},sports:{group:"Team",lead:"coach",room:"field",level:"division",num:"number"},dance:{group:"Class",lead:"teacher",room:"studio",level:"level",num:"number"},other:{group:"Group",lead:"lead",room:"location",level:"level",num:"number"}};
+  const K=o=>KIND[o.kind]||KIND.other;
+  const listRows=(owner,kind,fnSet,fnDel,fnAdd)=>{ // links or contacts on a place or group
+    const items=owner[kind]||[];
+    return `${items.map(x=>`<div class="row"><span class="sprow"><span class="rmeta who">${kind==="links"?"Link":"Contact"}</span>
+        ${kind==="links"?`<input type="text" value="${x.label||""}" placeholder="what it's for" style="width:150px" onchange="${fnSet}('${owner.id}','${x.id}','label',this.value)"><input type="text" class="grow" value="${x.url||""}" placeholder="https://" onchange="${fnSet}('${owner.id}','${x.id}','url',this.value)">`
+        :`<input type="text" value="${x.name||""}" placeholder="name" style="width:130px" onchange="${fnSet}('${owner.id}','${x.id}','name',this.value)"><input type="text" value="${x.role||""}" placeholder="role" style="width:110px" onchange="${fnSet}('${owner.id}','${x.id}','role',this.value)"><input type="tel" value="${x.phone||""}" placeholder="phone" style="width:120px" onchange="${fnSet}('${owner.id}','${x.id}','phone',this.value)"><input type="email" class="grow" value="${x.email||""}" placeholder="email" onchange="${fnSet}('${owner.id}','${x.id}','email',this.value)">`}</span>${del(fnDel,x.id,kind)}</div>`).join("")}
+`; };
+  const addRow=(owner,fnC,fnL)=>`<div class="row"><span></span><span><button class="newbtn" style="padding:3px 10px" onclick="${fnC}('${owner.id}')">+ Contact</button> <button class="newbtn" style="padding:3px 10px" onclick="${fnL}('${owner.id}')">+ Link</button></span></div>`;
+  const hoursRow=g=>`<div class="row"><span class="rmeta who">Hours</span><span class="hours">${[1,2,3,4,5,6,0].map(d=>`<label>${DAY_NAMES[d]}<input type="time" step="60" value="${g.hours?.[d]?.start||""}" onchange="setGroupHours('${g.id}',${d},'start',this.value)"><input type="time" step="60" value="${g.hours?.[d]?.end||""}" onchange="setGroupHours('${g.id}',${d},'end',this.value)"></label>`).join("")}</span></div>`;
+  const groupHTML=(o,g)=>{ const k=K(o), mem=membersOf(D,g.id), free=kids.filter(x=>!mem.some(e=>e.personId===x.id)), past=g.ends&&g.ends<dk;
+    if(past&&state.showPast!==g.id) return `<div class="grp past"><div class="row"><span class="rmeta">${g.name||"(unnamed)"}${g.level?` (${g.level})`:""} · ended ${fmtDateShort(g.ends)}</span><button class="newbtn" style="padding:3px 10px" onclick="state.showPast='${g.id}';render()">Show</button></div></div>`;
     return `<div class="grp">
-      <div class="row"><span class="sprow"><input type="text" value="${g.name||""}" placeholder="${o.kind==="school"?"Room 12":"Team"}" style="width:140px;font-weight:600" onchange="setGroup('${g.id}','name',this.value)">
-          <input type="text" value="${g.lead||""}" placeholder="${o.kind==="school"?"teacher":"coach"}" style="width:130px" onchange="setGroup('${g.id}','lead',this.value)">
-          <input type="text" value="${g.room||""}" placeholder="${o.kind==="school"?"room":"field"}" style="width:80px" onchange="setGroup('${g.id}','room',this.value)"></span>${del("delGroup",g.id,"group")}</div>
-      ${mem.map(e=>{ const k=D.people.find(p=>p.id===e.personId); return `<div class="row"><span class="sprow"><span class="rmeta who">${k?.name||"?"}</span>
-          <label class="rmeta">grade <input type="text" value="${e.grade||""}" style="width:44px" onchange="setEnr('${e.id}','grade',this.value)"></label>
-          <label class="rmeta">${o.kind==="school"?"dot":"number"} <input type="text" value="${e.dot||""}" style="width:52px" onchange="setEnr('${e.id}','dot',this.value)"></label>
-          <input type="text" value="${e.notes||""}" placeholder="notes" style="width:160px" onchange="setEnr('${e.id}','notes',this.value)"></span>${del("delEnr",e.id,"enr")}</div>`; }).join("")}
-      ${free.length?`<div class="row"><span class="rmeta who">Add</span><span>${free.map(k=>`<button class="newbtn" style="padding:3px 10px" onclick="addEnr('${g.id}','${k.id}')">+ ${k.name}</button>`).join(" ")}</span></div>`:""}
-      ${(g.specials||[]).map(sp=>{ const anyAlt=Object.values(sp.days||{}).includes("alt"); return `<div class="row"><span class="sprow"><span class="rmeta who">Special</span>
-          <input type="text" value="${sp.name||""}" placeholder="PE" onchange="setSpecial('${g.id}','${sp.id}','name',this.value)">
-          <span class="days">${[1,2,3,4,5].map(d=>{ const m=sp.days?.[d]||""; return `<button class="${m}" title="${m==="every"?"every week":m==="alt"?"every other week":"off"}" onclick="cycleSpecialDay('${g.id}','${sp.id}',${d})">${DAY_NAMES[d]}${m==="alt"?"<small>alt</small>":""}</button>`; }).join("")}</span>
-          ${anyAlt?`<span class="rmeta">alt weeks from the week of <input type="date" value="${sp.anchor||dk}" onchange="setSpecial('${g.id}','${sp.id}','anchor',this.value)"></span>`:""}</span>
-          ${del("delSpecial",sp.id,"sp")}</div>`; }).join("")}
-      <div class="row"><span class="rmeta" style="font-size:.75rem">tap a day once for every week, twice for every other week</span><button class="newbtn" onclick="addSpecial('${g.id}')">+ Special</button></div>
+      <div class="row"><span class="sprow"><input type="text" value="${g.name||""}" placeholder="${o.kind==="school"?"Room 12":"Blue Claws"}" style="width:150px;font-weight:600" onchange="setGroup('${g.id}','name',this.value)">
+          <label class="rmeta">${k.level} <input type="text" value="${g.level||""}" style="width:70px" onchange="setGroup('${g.id}','level',this.value)"></label>
+          <label class="rmeta">${k.room} <input type="text" value="${g.room||""}" style="width:90px" onchange="setGroup('${g.id}','room',this.value)"></label>
+          <label class="rmeta">season <input type="date" value="${g.starts||""}" onchange="setGroup('${g.id}','starts',this.value)"> to <input type="date" value="${g.ends||""}" onchange="setGroup('${g.id}','ends',this.value)"></label></span>${del("delGroup",g.id,"group")}</div>
+      ${o.kind==="school"?hoursRow(g):""}
+      ${mem.map(e=>{ const kid=D.people.find(p=>p.id===e.personId); return `<div class="row"><span class="sprow"><span class="rmeta who">${kid?.name||"?"}</span>
+          <label class="rmeta">${k.num} <input type="text" value="${e.dot||""}" style="width:52px" onchange="setEnr('${e.id}','dot',this.value)"></label>
+          <input type="text" class="grow" value="${e.notes||""}" placeholder="notes about ${kid?.name||"this kid"} here" onchange="setEnr('${e.id}','notes',this.value)"></span>${del("delEnr",e.id,"enr")}</div>`; }).join("")}
+      ${free.length?`<div class="row"><span class="rmeta who">Add</span><span>${free.map(x=>`<button class="newbtn" style="padding:3px 10px" onclick="addEnr('${g.id}','${x.id}')">+ ${x.name}</button>`).join(" ")}</span></div>`:""}
+      ${(g.recurring||[]).map(r=>{ const anyAlt=Object.values(r.days||{}).includes("alt"); return `<div class="row"><span class="sprow"><span class="rmeta who">${o.kind==="school"?"Special":"Practice"}</span>
+          <input type="text" value="${r.name||""}" placeholder="${o.kind==="school"?"PE":"Practice"}" onchange="setRecur('${g.id}','${r.id}','name',this.value)">
+          <span class="days">${[1,2,3,4,5,6,0].map(d=>{ const m=r.days?.[d]||""; return `<button class="${m}" title="${m==="every"?"every week":m==="alt"?"every other week":"off"}" onclick="cycleRecurDay('${g.id}','${r.id}',${d})">${DAY_NAMES[d]}${m==="alt"?"<small>alt</small>":""}</button>`; }).join("")}</span>
+          <label class="rmeta">at <input type="time" step="60" value="${r.time||""}" onchange="setRecur('${g.id}','${r.id}','time',this.value)"></label>
+          <label class="rmeta">bring <input type="text" value="${r.bring||""}" style="width:120px" onchange="setRecur('${g.id}','${r.id}','bring',this.value)"></label>
+          ${anyAlt?`<span class="rmeta">alt weeks from the week of <input type="date" value="${r.anchor||dk}" onchange="setRecur('${g.id}','${r.id}','anchor',this.value)"></span>`:""}</span>
+          ${del("delRecur",r.id,"rec")}</div>`; }).join("")}
+      <div class="row"><span class="rmeta" style="font-size:.75rem">tap a day once for every week, twice for every other week · a time puts it in that block of the day</span><button class="newbtn" onclick="addRecur('${g.id}')">+ ${o.kind==="school"?"Special":"Practice"}</button></div>
+      ${listRows(g,"contacts","setGroupItem","delGroupItem","addGroupContact")}
+      ${listRows(g,"links","setGroupItem","delGroupItem","addGroupLink")}
+      ${addRow(g,"addGroupContact","addGroupLink")}
+      <div class="row"><span class="sprow"><span class="rmeta who">Notes</span><input type="text" class="grow" value="${g.notes||""}" placeholder="anything about this ${k.group.toLowerCase()}" onchange="setGroup('${g.id}','notes',this.value)"></span></div>
     </div>`; };
-  const notes=(S.orgNotes||[]).filter(n=>n.date>=dk).sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id));
+  const orgHTML=o=>`<div class="card settings" style="margin-bottom:10px">
+      <div class="row"><span class="sprow"><input type="text" value="${o.name||""}" placeholder="Richland Elementary" style="width:220px;font-weight:700" onchange="setOrg('${o.id}','name',this.value)">
+          <select onchange="setOrg('${o.id}','kind',this.value)">${["school","sports","dance","other"].map(v=>`<option value="${v}" ${o.kind===v?"selected":""}>${v}</option>`).join("")}</select>
+          ${o.kind==="school"?`<label class="rmeta"><input type="checkbox" ${o.lunch?"checked":""} onchange="setOrg('${o.id}','lunch',this.checked)"> lunch menu (lunch.json)</label>`:""}</span>${del("delOrg",o.id,"org")}</div>
+      ${listRows(o,"contacts","setOrgItem","delOrgItem","addOrgContact")}
+      ${listRows(o,"links","setOrgItem","delOrgItem","addOrgLink")}
+      ${addRow(o,"addOrgContact","addOrgLink")}
+      <div class="row"><span class="sprow"><span class="rmeta who">Notes</span><input type="text" class="grow" value="${o.notes||""}" placeholder="address, office hours, parking" onchange="setOrg('${o.id}','notes',this.value)"></span></div>
+      ${groupsOf(D,o.id).map(g=>groupHTML(o,g)).join("")}
+      <div class="row"><span></span><button class="newbtn" onclick="addGroup('${o.id}')">+ ${K(o).group}</button></div>
+    </div>`;
+  const events=(S.events||[]).filter(n=>n.date>=dk).sort((a,b)=>a.date.localeCompare(b.date)||(a.time||"").localeCompare(b.time||"")||a.id.localeCompare(b.id));
   const scopeName=n=>n.personId?nameOf(n.personId):n.groupId?(groupById(D,n.groupId)?.name||"?"):(orgById(D,n.orgId)?.name||"?")+" · everyone";
-  const scopeOpts=(S.orgs||[]).flatMap(o=>[`<option value="o:${o.id}">${o.name} · everyone</option>`,...groupsOf(D,o.id).map(g=>`<option value="g:${g.id}">${g.name}</option>`)]).concat(kids.map(k=>`<option value="p:${k.id}">${k.name} only</option>`));
+  const scopeOpts=(S.orgs||[]).flatMap(o=>[`<option value="o:${o.id}">${o.name||"(place)"} · everyone</option>`,...groupsOf(D,o.id).filter(g=>!g.ends||g.ends>=dk).map(g=>`<option value="g:${g.id}">${g.name||"(group)"}${g.level?` (${g.level})`:""}</option>`)]).concat(kids.map(k=>`<option value="p:${k.id}">${k.name} only</option>`));
+  const kindIc={note:"📌",event:"📅",closed:"🚫"};
   return `${(S.orgs||[]).map(orgHTML).join("")}
     <div class="row" style="padding:0 0 10px"><span></span><button class="newbtn" onclick="addOrg()">+ Place</button></div>
     <div class="card settings">
-      <div class="row" style="border-bottom:none"><span style="font-weight:700">One-offs</span><span class="rmeta">dated · shown that morning and the evening before</span></div>
-      ${notes.map(n=>`<div class="row"><span><b>${fmtDateShort(n.date)}</b> · ${n.text} <span class="rmeta">${scopeName(n)}</span></span>${del("delOrgNote",n.id,"note")}</div>`).join("")}
-      <div class="row"><span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><input type="date" id="sn_date" value="${dk}">
-          <select id="sn_scope">${scopeOpts.join("")}</select>
-          <input type="text" id="sn_text" placeholder="Stuffy day · Ice cream day, bring $2" style="min-width:220px"></span>
-        <button class="newbtn" onclick="addOrgNote()">+ Add</button></div>
+      <div class="row" style="border-bottom:none"><span style="font-weight:700">Events and one-offs</span><span class="rmeta">dated · shown that day and the evening before · a time puts it in that block</span></div>
+      ${events.map(n=>`<div class="row"><span>${kindIc[n.kind]||"📌"} <b>${fmtDateShort(n.date)}</b>${n.time?` ${fmtHour(n.time)}`:""} · ${n.kind==="closed"?`<i>closed</i>${n.text?` · ${n.text}`:""}`:n.text}${n.location?` · ${n.location}`:""}${n.bring?` · bring ${n.bring}`:""} <span class="rmeta">${scopeName(n)}</span></span>${del("delEvent",n.id,"ev")}</div>`).join("")}
+      <div class="row" style="flex-wrap:wrap"><span class="sprow" style="flex:1"><input type="date" id="ev_date" value="${dk}">
+          <select id="ev_scope">${scopeOpts.join("")}</select>
+          <select id="ev_kind"><option value="note">note</option><option value="event">event (has a time)</option><option value="closed">closed / no school</option></select>
+          <input type="time" step="60" id="ev_time"><input type="text" id="ev_text" class="grow" placeholder="Stuffy day · Game vs Padres · Season party">
+          <input type="text" id="ev_loc" placeholder="location" style="width:120px"><input type="text" id="ev_bring" placeholder="bring" style="width:110px"></span>
+        <button class="newbtn" onclick="addEvent()">+ Add</button></div>
     </div>`;
 }
 function fmtDateShort(dk){ return new Date(dk+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}); }
 function confirmThen(key,id,fn){ if(state.confirmDel!==key+":"+id){ state.confirmDel=key+":"+id; render(); return; } state.confirmDel=null; fn(); save(); render(); }
-window.addOrg=()=>{ const S=state.data.settings; S.orgs=S.orgs||[]; S.orgs.push({id:uid("org"),name:"",kind:"school",hours:{},lunch:false,notes:""}); save(); render(); };
-window.setOrg=(id,f,v)=>{ const o=orgById(state.data,id); if(!o) return; o[f]=typeof v==="string"?v.trim():v; save(); render(); };
-window.setOrgHours=(id,d,f,v)=>{ const o=orgById(state.data,id); if(!o) return; o.hours=o.hours||{}; o.hours[String(d)]=o.hours[String(d)]||{}; o.hours[String(d)][f]=v; save(); render(); };
+const trimv=v=>typeof v==="string"?v.trim():v;
+window.addOrg=()=>{ const S=state.data.settings; S.orgs=S.orgs||[]; S.orgs.push({id:uid("org"),name:"",kind:"school",lunch:false,links:[],contacts:[],notes:""}); save(); render(); };
+window.setOrg=(id,f,v)=>{ const o=orgById(state.data,id); if(!o) return; o[f]=trimv(v); save(); render(); };
 window.delOrg=(id)=>confirmThen("org",id,()=>{ const S=state.data.settings; const gids=groupsOf(state.data,id).map(g=>g.id);
-  S.enrollments=(S.enrollments||[]).filter(e=>!gids.includes(e.groupId)); S.groups=(S.groups||[]).filter(g=>g.orgId!==id); S.orgNotes=(S.orgNotes||[]).filter(n=>n.orgId!==id); S.orgs=S.orgs.filter(o=>o.id!==id); });
-window.addGroup=(orgId)=>{ const S=state.data.settings; S.groups=S.groups||[]; S.groups.push({id:uid("grp"),orgId,name:"",lead:"",room:"",specials:[],notes:""}); save(); render(); };
-window.setGroup=(id,f,v)=>{ const g=groupById(state.data,id); if(!g) return; g[f]=(v||"").trim(); save(); render(); };
-window.delGroup=(id)=>confirmThen("group",id,()=>{ const S=state.data.settings; S.enrollments=(S.enrollments||[]).filter(e=>e.groupId!==id); S.orgNotes=(S.orgNotes||[]).filter(n=>n.groupId!==id); S.groups=S.groups.filter(g=>g.id!==id); });
-window.addEnr=(groupId,personId)=>{ const S=state.data.settings; S.enrollments=S.enrollments||[]; S.enrollments.push({id:uid("enr"),groupId,personId,grade:"",dot:"",notes:""}); save(); render(); };
-window.setEnr=(id,f,v)=>{ const e=(state.data.settings.enrollments||[]).find(x=>x.id===id); if(!e) return; e[f]=(v||"").trim(); save(); render(); };
+  S.enrollments=(S.enrollments||[]).filter(e=>!gids.includes(e.groupId)); S.groups=(S.groups||[]).filter(g=>g.orgId!==id); S.events=(S.events||[]).filter(n=>n.orgId!==id); S.orgs=S.orgs.filter(o=>o.id!==id); });
+window.addOrgLink=(id)=>{ const o=orgById(state.data,id); o.links=o.links||[]; o.links.push({id:uid("l"),label:"",url:""}); save(); render(); };
+window.addOrgContact=(id)=>{ const o=orgById(state.data,id); o.contacts=o.contacts||[]; o.contacts.push({id:uid("c"),name:"",role:"",phone:"",email:""}); save(); render(); };
+window.setOrgItem=(oid,id,f,v)=>{ const o=orgById(state.data,oid); const x=[...(o.links||[]),...(o.contacts||[])].find(x=>x.id===id); if(x){ x[f]=trimv(v); save(); render(); } };
+window.delOrgItem=(id)=>confirmThen("item",id,()=>{ for(const o of state.data.settings.orgs||[]){ o.links=(o.links||[]).filter(x=>x.id!==id); o.contacts=(o.contacts||[]).filter(x=>x.id!==id); } });
+window.addGroup=(orgId)=>{ const S=state.data.settings; S.groups=S.groups||[]; S.groups.push({id:uid("grp"),orgId,name:"",level:"",room:"",hours:{},starts:"",ends:"",contacts:[],links:[],recurring:[],notes:""}); save(); render(); };
+window.setGroup=(id,f,v)=>{ const g=groupById(state.data,id); if(!g) return; g[f]=trimv(v); save(); render(); };
+window.setGroupHours=(id,d,f,v)=>{ const g=groupById(state.data,id); if(!g) return; g.hours=g.hours||{}; g.hours[String(d)]=g.hours[String(d)]||{}; g.hours[String(d)][f]=v; save(); render(); };
+window.delGroup=(id)=>confirmThen("group",id,()=>{ const S=state.data.settings; S.enrollments=(S.enrollments||[]).filter(e=>e.groupId!==id); S.events=(S.events||[]).filter(n=>n.groupId!==id); S.groups=S.groups.filter(g=>g.id!==id); });
+window.addGroupLink=(id)=>{ const g=groupById(state.data,id); g.links=g.links||[]; g.links.push({id:uid("l"),label:"",url:""}); save(); render(); };
+window.addGroupContact=(id)=>{ const g=groupById(state.data,id); g.contacts=g.contacts||[]; g.contacts.push({id:uid("c"),name:"",role:"",phone:"",email:""}); save(); render(); };
+window.setGroupItem=(gid,id,f,v)=>{ const g=groupById(state.data,gid); const x=[...(g.links||[]),...(g.contacts||[])].find(x=>x.id===id); if(x){ x[f]=trimv(v); save(); render(); } };
+window.delGroupItem=(id)=>confirmThen("item",id,()=>{ for(const g of state.data.settings.groups||[]){ g.links=(g.links||[]).filter(x=>x.id!==id); g.contacts=(g.contacts||[]).filter(x=>x.id!==id); } });
+window.addEnr=(groupId,personId)=>{ const S=state.data.settings; S.enrollments=S.enrollments||[]; S.enrollments.push({id:uid("enr"),groupId,personId,dot:"",notes:""}); save(); render(); };
+window.setEnr=(id,f,v)=>{ const e=(state.data.settings.enrollments||[]).find(x=>x.id===id); if(!e) return; e[f]=trimv(v); save(); render(); };
 window.delEnr=(id)=>confirmThen("enr",id,()=>{ const S=state.data.settings; S.enrollments=S.enrollments.filter(e=>e.id!==id); });
-window.addSpecial=(gid)=>{ const g=groupById(state.data,gid); if(!g) return; g.specials=g.specials||[]; g.specials.push({id:uid("sp"),name:"",days:{}}); save(); render(); };
-window.delSpecial=(id)=>confirmThen("sp",id,()=>{ for(const g of state.data.settings.groups||[]) g.specials=(g.specials||[]).filter(x=>x.id!==id); });
-window.setSpecial=(gid,id,f,v)=>{ const sp=groupById(state.data,gid)?.specials?.find(x=>x.id===id); if(!sp) return; sp[f]=(v||"").trim(); save(); render(); };
-window.cycleSpecialDay=(gid,id,d)=>{ const sp=groupById(state.data,gid)?.specials?.find(x=>x.id===id); if(!sp) return; sp.days=sp.days||{};
-  const m=sp.days[String(d)]||""; const next=m===""?"every":m==="every"?"alt":""; if(next) sp.days[String(d)]=next; else delete sp.days[String(d)];
-  if(next==="alt"&&!sp.anchor) sp.anchor=todayKey(state.now); save(); render(); };
-window.addOrgNote=()=>{ const S=state.data.settings, date=$("#sn_date").value, text=$("#sn_text").value.trim(), sc=$("#sn_scope").value||"";
-  if(!date||!text){ toast("Date and a note, please"); return; } if(!sc){ toast("Add a place first"); return; }
-  const [t,id]=sc.split(":"); const n={id:uid("sn"),date,text}; if(t==="p"){ n.personId=id; } else if(t==="g"){ n.groupId=id; n.orgId=groupById(state.data,id)?.orgId; } else n.orgId=id;
-  S.orgNotes=S.orgNotes||[]; S.orgNotes.push(n); save(); render(); };
-window.delOrgNote=(id)=>confirmThen("note",id,()=>{ const S=state.data.settings; S.orgNotes=(S.orgNotes||[]).filter(n=>n.id!==id); });
+window.addRecur=(gid)=>{ const g=groupById(state.data,gid); if(!g) return; g.recurring=g.recurring||[]; g.recurring.push({id:uid("rc"),name:"",days:{},time:"",bring:""}); save(); render(); };
+window.delRecur=(id)=>confirmThen("rec",id,()=>{ for(const g of state.data.settings.groups||[]) g.recurring=(g.recurring||[]).filter(x=>x.id!==id); });
+window.setRecur=(gid,id,f,v)=>{ const r=groupById(state.data,gid)?.recurring?.find(x=>x.id===id); if(!r) return; r[f]=trimv(v); save(); render(); };
+window.cycleRecurDay=(gid,id,d)=>{ const r=groupById(state.data,gid)?.recurring?.find(x=>x.id===id); if(!r) return; r.days=r.days||{};
+  const m=r.days[String(d)]||""; const next=m===""?"every":m==="every"?"alt":""; if(next) r.days[String(d)]=next; else delete r.days[String(d)];
+  if(next==="alt"&&!r.anchor) r.anchor=todayKey(state.now); save(); render(); };
+window.addEvent=()=>{ const S=state.data.settings, date=$("#ev_date").value, text=$("#ev_text").value.trim(), sc=$("#ev_scope").value||"", kind=$("#ev_kind").value, time=$("#ev_time").value, location=$("#ev_loc").value.trim(), bring=$("#ev_bring").value.trim();
+  if(!date||(!text&&kind!=="closed")){ toast("Date and a note, please"); return; } if(!sc){ toast("Add a place first"); return; }
+  const [t,id]=sc.split(":"); const n={id:uid("ev"),date,text,kind,time,location,bring}; if(t==="p"){ n.personId=id; } else if(t==="g"){ n.groupId=id; n.orgId=groupById(state.data,id)?.orgId; } else n.orgId=id;
+  S.events=S.events||[]; S.events.push(n); save(); render(); };
+window.delEvent=(id)=>confirmThen("ev",id,()=>{ const S=state.data.settings; S.events=(S.events||[]).filter(n=>n.id!==id); });
 window.addSchoolNote=()=>{ const S=state.data.settings, date=$("#sn_date").value, text=$("#sn_text").value.trim(), kid=$("#sn_who").value;
   if(!date||!text){ toast("Date and a note, please"); return; } S.schoolNotes=S.schoolNotes||[]; S.schoolNotes.push({id:uid("sn"),date,text,kids:kid?[kid]:[]}); save(); render(); };
 window.delSchoolNote=(id)=>{ if(state.confirmDel!=="note:"+id){ state.confirmDel="note:"+id; render(); return; }
@@ -1739,7 +1812,7 @@ function renderKidCol(kid,dk){
       + js.map(x=>jobDone(x)?`<button class="krow kdone" onclick="openTask('${x.c.id}')">✓ ${x.c.name}${x.c.stars?` <span class="starpill">⭐${x.c.stars}</span>`:""}<span class="chev">›</span></button>`
                  :mode==="later"?`<button class="rrowk later" onclick="openTask('${x.c.id}')"><span class="rk-ic">🕐</span><span class="rk-nm">${x.c.name}</span><span class="rk-meta">${daypartLabel(dp,kid)}</span><span class="chev">›</span></button>`
                  :renderTile(x.i,kid)).join("");
-    const strip=dp==="morning"?schoolStripHTML(kid,dk):dp==="evening"?tomorrowStripHTML(kid,dk):"";
+    const strip=placesStripHTML(kid,dk,dp);
     return `<div class="card dcard ${mode} ${isNow?"cur":""}"><div class="dband"><span class="dico">${dpIcon(dp)}</span><span class="dname">${dpLabel(dp,kid)}</span><span class="drange">| ${dpRange(dp)}</span></div>${strip}${rows}</div>`;
   }).join("");
   const allMustDone=info.every(x=>x.done)&&must.every(jobDone);
@@ -1927,19 +2000,6 @@ function renderGeneralSettings(){ const D=state.data;
           <div class="iobtns"><button onclick="exportJSON()">Export JSON</button><button onclick="importJSON()">Import JSON</button></div>
           <div class="empty" style="text-align:center;font-size:.72rem">${BUILD}</div>
         </div>`;
-}
-function renderAdultSchool(dk){ // today at the kids' places: where, what's special, pickup, lunch decision, notes
-  const D=state.data, kids=D.people.filter(p=>p.role==="child");
-  const rows=kids.map(k=>{ const day=kidDay(D,k,dk); if(!day.places.length) return "";
-    const where=day.places.map(p=>`${p.org.name}${p.group.name?` · ${p.group.name}`:""}${p.enr.dot?` · dot ${p.enr.dot}`:""}`).join(" / ");
-    const ends=day.places.map(p=>orgHours(p.org,dk).end).filter(Boolean).map(e=>`🕐 out ${fmtHour(e)}${day.early.some(x=>x.end===e)?" (early)":""}`);
-    const ch=lunchChoice(D,dk,k.id), lunch=day.lunch?[ch==="pack"?"🥪 packing lunch":ch==="buy"?"🍽 buying lunch":`<span class="rmeta">lunch not decided</span>`]:[];
-    const bits=[day.specials.length?`🏫 ${day.specials.join(" + ")}`:"", ...ends, ...lunch, ...day.notes.map(n=>`📌 ${n.text}`)].filter(Boolean);
-    return `<div class="fyirow"><b>${k.name}</b> <span class="rmeta">${where}</span><br>${bits.join(" · ")||"<span class='rmeta'>nothing special</span>"}</div>`; }).join("");
-  if(!rows) return "";
-  const L=lunchFor(dk), showMenu=(D.settings.orgs||[]).some(o=>o.lunch)&&L;
-  const menu=showMenu?(L.items?`<div class="fyirow rmeta">Menu: ${L.items.join(" · ")}</div>`:`<div class="fyirow rmeta">${L.msg}</div>`):"";
-  return `<div class="sect" style="margin-top:14px"><h3>Today at their places</h3><div class="card">${rows}${menu}</div></div>`;
 }
 function renderAdultCatchup(){
   const D=state.data, dkStr=todayKey(state.now), nowDp=daypartNow(), occ=occursOn(D,state.now);
