@@ -1,0 +1,27 @@
+name: Fetch lunch menu
+# Pulls the week's Richland Elementary lunch entrées into lunch.json for the contributions board.
+# Sunday 8pm Pacific for the coming week, with a Monday 6am Pacific retry in case the menu posted late.
+# (Cron is UTC: 03:00 Mon = 8pm Sun PDT; 13:00 Mon = 6am PDT. Both fire an hour later once PST starts.)
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+    - cron: "0 13 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch and parse the weekly menu
+        run: python scripts/fetch_lunch.py
+      - name: Commit lunch.json if it changed
+        run: |
+          git config user.name "lunch-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add lunch.json
+          git diff --cached --quiet && echo "menu unchanged" || git commit -m "lunch: week of $(python -c "import json;print(json.load(open('lunch.json'))['weekStart'])")" && git push
