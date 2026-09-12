@@ -473,6 +473,52 @@ a.chip{color:var(--adult)}
 .huedoor.on{background:rgba(255,255,255,.25)}
 .huerow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:8px 14px;font-family:"Fredoka"}
 .huerow .swatches button{width:30px;height:30px}
+/* ---------- kindness: star points ---------- */
+.kstar{overflow:visible}
+.kstar .wedge{fill:var(--k-jar);stroke:#fff;stroke-width:2;stroke-linejoin:round;transition:fill .4s;transform-origin:50px 52px;transform-box:view-box}
+.kstar .wedge.on{fill:var(--star)}
+.kstar .wedge.new{animation:wedgein .9s cubic-bezier(.2,1.4,.4,1) .2s both}
+.kstar.full{animation:starburst 1.1s ease .3s both;transform-origin:center}
+@keyframes wedgein{0%{transform:scale(0);opacity:0}70%{transform:scale(1.25);opacity:1}100%{transform:scale(1)}}
+@keyframes starburst{0%{transform:scale(1)}30%{transform:scale(1.25) rotate(-8deg)}60%{transform:scale(1.1) rotate(6deg)}100%{transform:scale(1)}}
+.kinddoor{gap:4px;padding-left:10px}
+.kinddoor small{font-size:.75rem;opacity:.85}
+.kinddoor .kstar .wedge{fill:rgba(255,255,255,.3);stroke:rgba(255,255,255,.7);stroke-width:3}
+.kinddoor .kstar .wedge.on{fill:var(--star)}
+.kinddoor .kstar.pop{animation:pop .5s ease}
+.kindbanner{background:var(--star-soft);border:2px solid var(--star);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:"Fredoka";font-size:1.05rem}
+.kindbanner button{background:var(--star);color:#3a2a00;border-radius:999px;padding:8px 16px;font-family:"Fredoka";font-weight:600}
+.kp .bigstar{display:flex;flex-direction:column;align-items:center;gap:4px}
+.kp .bigstar .kstar{width:min(220px,60vw);height:auto;filter:drop-shadow(0 6px 0 var(--k-jar))}
+.kp .bigstar .kstar .wedge{stroke:var(--k-bg);stroke-width:2.5}
+.kp .count{font-size:1.5rem;font-weight:700;color:var(--k-ink)}
+.kp .count small{font-weight:500;color:var(--k-muted);font-size:1rem}
+.kp .chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:0}
+.kp .chips button{background:#fff;border:3px solid var(--k-soft);border-radius:999px;padding:10px 16px;font-family:"Fredoka";font-size:1.1rem;color:var(--k-ink);font-weight:600}
+.kp .chips button.on{background:var(--k-accent);border-color:var(--k-accent)}
+.kp .saybox{display:flex;gap:10px;align-items:stretch;width:100%;max-width:520px}
+.kp .saybox textarea{flex:1;min-height:64px;border:3px solid var(--k-lock);border-radius:16px;padding:10px 12px;font-family:inherit;font-size:1.15rem;resize:none;background:#fff;color:var(--k-ink)}
+.kp .micbtn{width:72px;border-radius:16px;background:var(--k-soft);color:var(--k-ink);font-size:2rem;display:grid;place-items:center;flex:none}
+.kp .micbtn.listening{background:#ffd4d4;animation:listen 1s ease-in-out infinite}
+@keyframes listen{0%,100%{box-shadow:0 0 0 0 rgba(220,60,60,.5)}50%{box-shadow:0 0 0 12px rgba(220,60,60,0)}}
+.kp .heard{background:var(--k-soft);border-radius:20px;padding:14px 18px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:10px;align-items:center}
+.kp .heard q{font-size:1.3rem;font-weight:600;color:var(--k-ink);quotes:"“" "”"}
+.kp .whobtn{display:flex;align-items:center;gap:14px;background:var(--k-accent);color:var(--k-ink);border-radius:999px;padding:12px 32px 12px 14px;font-size:1.5rem;font-weight:700;font-family:"Fredoka"}
+.kp .whobtn .avatar{width:48px;height:48px;font-size:1.2rem}
+.kp .hearbtn{background:#fff;border-radius:999px;padding:8px 16px;font-family:"Fredoka";font-weight:600;font-size:1rem;color:var(--k-ink);border:3px solid var(--k-soft)}
+.kp .divider{display:flex;align-items:center;gap:8px;justify-content:center;font-family:"Fredoka";font-weight:700;color:#8a6414;background:var(--star-soft);border-radius:999px;padding:6px 14px;margin:2px 0 12px}
+.kp .rrow{cursor:pointer}
+.kp .rrow .img{background:var(--star-soft)}
+.kp .rrow.given .img{background:var(--k-soft)}
+.kp .rrow .img .kstar{width:40px;height:40px}
+.kp .rrow .img .kstar .wedge{stroke:var(--star-soft)}
+.kp .rrow .img .kstar .wedge:not(.on){fill:#fff}
+.kp .totals{font-size:.9rem;color:var(--k-muted);text-align:center;margin-top:4px}
+.kp .lanes{text-align:left}
+/* adult kindness feed */
+.kind-adult .krow2{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 14px;border-top:1px solid var(--line);font-size:.9rem}
+.kind-adult .krow2.ret{color:var(--muted)}
+.kind-adult .krow2.ret b{font-weight:500;text-decoration:line-through}
 </style>
 </head>
 <body>
@@ -587,6 +633,7 @@ const DEFAULT_DATA = () => ({
   log: [],
   money: [], runs: [], goals: [], seq: 1,
   rewards: [], redemptions: [], starLedger: [], moneyClaims: [],
+  kindness: [],      // star points kids give each other (schema v1.10)
 });
 
 /* ---- date helpers ---- */
@@ -780,6 +827,9 @@ function storyEvents(data,kidId){
       out.push({d:r.date,ic:rw?.kind==="cashout"?"💵":"⭐",t:rw?.kind==="cashout"?`Traded ${-r.amt} ★ for ${fmtMoney(rd?.amountUsd||0)}`:`Traded ${-r.amt} ★ for ${rw?.title||"a reward"}`,s:rd?.kidNote?`You said: "${rd.kidNote}"`:"",amt:`− ${-r.amt} ★`,star:true,seq:r.seq}); }
     else out.push({d:r.date,ic:"⭐",t:r.note||"Star adjustment",s:"",amt:`${r.amt>0?"+":"−"} ${Math.abs(r.amt)} ★`,plus:r.amt>0,star:true,seq:r.seq});
   }
+  for(const p of kindnessStarEvents(data,kidId)){ // derived: every fifth star point received is a whole star
+    out.push({d:p.date,ic:"💛",t:`Kindness star! 5 star points from ${nameOf(p.giver)}`,s:p.reason?`The last one: "${p.reason}"`:"",amt:"+ 1 ★",plus:true,star:true,seq:5e5});
+  }
   out.forEach((e,i)=>{ if(e.seq===undefined) e.seq=1e6-i; }); // money events were built newest-first; keep that order within a day
   out.sort((a,b)=>b.d.localeCompare(a.d)||((b.seq||0)-(a.seq||0)));
   return out;
@@ -807,7 +857,20 @@ function seedRewards(data){ // illustrative defaults only; the family prices its
 }
 /* ---- earned stars: derived, never stored ---- */
 const starOwner=i=>i.pid==="__open__"?i.claimedBy:i.pid; // an open task's stars belong to whoever claimed it
-function earnedStars(data,kidId){ let n=0; for(const i of data.instances){ if(starOwner(i)===kidId&&i.starsEarned) n+=i.starsEarned; } return n; }
+function earnedStars(data,kidId){ let n=0; for(const i of data.instances){ if(starOwner(i)===kidId&&i.starsEarned) n+=i.starsEarned; } return n+kindnessStars(data,kidId); }
+/* ---- kindness star points (schema v1.10): kid-to-kid recognition, five points derive one star. Append-only; derived, never converted ---- */
+const KIND_PRESETS=["shared with me","helped me","was gentle","said something nice","let me go first","included me","played nicely with me"];
+function ensureKindness(data){ data.kindness=data.kindness||[]; }
+function givePoint(data,giverId,receiverId,reason,preset,method){ ensureKindness(data);
+  const p={id:uid("k"),giver:giverId,receiver:receiverId,reason:(reason||"").trim(),preset:preset||null,method:method||"typed",status:"given",seen:false,at:new Date().toISOString(),date:todayKey(new Date())};
+  data.kindness.push(p); return p; }
+function returnPoint(data,id,note){ const p=(data.kindness||[]).find(x=>x.id===id); if(!p||p.status!=="given") return; p.status="returned"; p.returnedAt=new Date().toISOString(); p.returnedNote=(note||"").trim(); }
+function pointsReceived(data,kidId){ return (data.kindness||[]).filter(p=>p.receiver===kidId&&p.status==="given").sort((a,b)=>a.at.localeCompare(b.at)); }
+function pointsGiven(data,kidId){ return (data.kindness||[]).filter(p=>p.giver===kidId&&p.status==="given").sort((a,b)=>a.at.localeCompare(b.at)); }
+function kindnessStars(data,kidId){ return Math.floor(pointsReceived(data,kidId).length/5); }
+function partialPoints(data,kidId){ return pointsReceived(data,kidId).length%5; }
+function unseenPoints(data,kidId){ return (data.kindness||[]).filter(p=>p.receiver===kidId&&p.status==="given"&&!p.seen); }
+function kindnessStarEvents(data,kidId){ return pointsReceived(data,kidId).filter((p,i)=>(i+1)%5===0); } // the fifth, tenth… point: the moment a star formed
 function starLedgerSum(data,kidId){ return (data.starLedger||[]).filter(r=>r.kid===kidId).reduce((s,r)=>s+r.amt,0); }
 function starBalance(data,kidId){ return earnedStars(data,kidId)+starLedgerSum(data,kidId); }
 function reservedStars(data,kidId){ return (data.redemptions||[]).filter(r=>r.kid===kidId&&r.status==="requested").reduce((s,r)=>s+r.starCost,0); }
@@ -1148,7 +1211,7 @@ function migrate(data){
   delete S.kidDailyClaimCap;
   for(const i of data.instances) if(!i.id) i.id=uid("i");
   for(const r of data.routines) if(!r.id) r.id=uid("r_");
-  ensureMoney(data); ensureClaims(data);
+  ensureMoney(data); ensureClaims(data); ensureKindness(data);
   seedRewards(data);
   migrateStars(data);
   data.version="1.5";
@@ -1275,7 +1338,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.34 · adult recap in day order";
+const BUILD="v0.35 · kindness star points";
 const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
@@ -1376,6 +1439,7 @@ function render(){
   const app=$("#app");
   if(state.page && String(state.page).startsWith("money:")){ app.innerHTML=renderMoneyPage(String(state.page).slice(6)); return; }
   if(state.page && String(state.page).startsWith("rewards:")){ app.innerHTML=renderRewardsPage(String(state.page).slice(8)); return; }
+  if(state.page && String(state.page).startsWith("kind:")){ app.innerHTML=renderKindnessPage(String(state.page).slice(5)); afterKindnessRender(); return; }
   if(state.page && String(state.page).startsWith("task:")){ app.innerHTML=renderTaskDetail(String(state.page).slice(5)); return; }
   if(state.page && String(state.page).startsWith("tedit:")){ app.innerHTML=renderTaskEditor(String(state.page).slice(6)); return; }
   if(state.page && String(state.page).startsWith("edit:")){ app.innerHTML=renderRoutineEditor(String(state.page).slice(5)); return; }
@@ -1864,20 +1928,24 @@ function renderKidCol(kid,dk){
     ${group("Up for grabs","⭐",grabs)}${group("Waiting for a grown-up","✓?",waiting)}${group("Done today","✓",doneX)}
     ${!grabs&&!waiting&&!doneX?`<div class="empty">Nothing extra right now.</div>`:""}</div>`;
   const kb=balances(D,kid.id), kidTotal=kb.spend+kb.save+kb.share+kb.holding, pendRun=pendingRuns(D,kid.id)[0];
-  const starsNow=availableStars(D,kid.id), pendStars=pendingStars(D,kid.id);
+  const starsNow=availableStars(D,kid.id), pendStars=pendingStars(D,kid.id), partial=partialPoints(D,kid.id), unseen=unseenPoints(D,kid.id);
   state.lastJar=state.lastJar||{}; const last=state.lastJar[kid.id]||{}; // the jars jump only when their number changes, never on navigation
-  const starPop=last.stars!==undefined&&last.stars!==starsNow, moneyPop=last.money!==undefined&&last.money!==kidTotal;
-  state.lastJar[kid.id]={stars:starsNow,money:kidTotal};
+  const starPop=last.stars!==undefined&&last.stars!==starsNow, moneyPop=last.money!==undefined&&last.money!==kidTotal, kindPop=last.partial!==undefined&&last.partial!==partial;
+  state.lastJar[kid.id]={stars:starsNow,money:kidTotal,partial};
+  const givers=[...new Set(unseen.map(p=>p.giver))].map(nameOf).join(" and ");
+  const kindBanner=unseen.length?`<div class="kindbanner"><span>💛 ${givers} gave you ${unseen.length===1?"a star point":unseen.length+" star points"}!</span><button onclick="kpSeen('${kid.id}')">See it</button></div>`:"";
   const hueOpen=state.hueOpen===kid.id;
   return `<div class="kidcol" style="--hue:${kid.hue??350}">
     <div class="kidhead" style="background:var(--k-main)">
       <h2 style="display:flex;align-items:center;gap:10px">${avatarHTML(kid)}${kid.name}</h2>
       <div class="doors"><button class="jar stardoor" onclick="openRewards('${kid.id}')" aria-label="${starsNow} stars${pendStars?`, ${pendStars} being checked`:""}">⭐ <span class="${starPop?"pop":""}">${starsNow}</span>${pendStars?`<span class="pendchip" title="waiting for a grown-up to check">+${pendStars}</span>`:""}</button>
+        <button class="jar kinddoor" onclick="openKindness('${kid.id}')" aria-label="Star points: ${partial} of 5${unseen.length?`, ${unseen.length} new`:""}" title="Kindness star points">${starWedges(partial,26,kindPop?"pop":"")}<span class="${kindPop?"pop":""}">${partial}<small>/5</small></span></button>
         <button class="moneydoor" onclick="openMoney('${kid.id}')" aria-label="My money${kb.holding>0?`, ${fmtMoney(kb.holding)} waiting for you`:""}">💰 <span class="${moneyPop?"pop":""}">${fmtMoney(kidTotal)}</span>${kb.holding>0?`<span class="pendchip money" title="waiting for you to pick a jar">+${fmtMoney(kb.holding)}</span>`:""}</button>
         <button class="huedoor ${hueOpen?"on":""}" onclick="toggleHue('${kid.id}')" aria-label="Pick my color" title="Pick my color"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
     </div>
     ${hueOpen?`<div class="huerow"><span>My color</span><span class="swatches">${HUE_PRESETS.map(h=>`<button data-hue="${h.h}" class="${kid.hue===h.h?"on":""}" title="${h.n}" style="background:oklch(0.76 0.19 ${h.h})" onclick="setHue('${kid.id}',${h.h})"></button>`).join("")}</span></div>`:""}
     ${pendRun?`<div class="allowbanner"><span>🎉 Allowance day! Your money for ${md(pendRun.date)} is ready.</span><button onclick="openMoney('${kid.id}','run')">Let's go</button></div>`:""}
+    ${kindBanner}
     ${todayHTML}
     ${extraHTML}
   </div>`;
@@ -1989,6 +2057,7 @@ function renderAdult(dk){
     <div style="margin-top:14px">${renderAdultNow()}</div>
     <div style="margin-top:14px">${renderPlanner()}</div>
     ${renderAdultMoney()}
+    ${renderAdultKindness()}
     <div style="margin-top:14px">
       <div class="sect"><h3>This week's minutes</h3>
         <div class="card"><table class="ledger"><tr><th>Person</th><th>Household min</th></tr>
@@ -2374,6 +2443,7 @@ window.removePerson=(pid)=>{ if(state.confirmDel!=="person:"+pid){ state.confirm
   D.people=D.people.filter(p=>p.id!==pid);
   D.instances=D.instances.filter(i=>i.pid!==pid);
   D.redemptions=(D.redemptions||[]).filter(r=>r.kid!==pid); D.starLedger=(D.starLedger||[]).filter(r=>r.kid!==pid);
+  D.kindness=(D.kindness||[]).filter(p=>p.giver!==pid&&p.receiver!==pid);
   for(const c of D.registry){ if(c.assignees) c.assignees=c.assignees.filter(x=>x!==pid);
     if(c.accountable===pid) c.accountable="a1"; }
   for(const r of D.routines){ r.people=r.people.filter(x=>x!==pid);
@@ -2722,6 +2792,122 @@ function renderRewardsPage(kidId){
       </div></div></div></div>`;
 }
 
+/* ---------- kindness: star points (kid page, give flow, show screen) ---------- */
+function starWedges(n,size,cls,newIdx){ // a five-pointed star cut into five wedges (centre → one point each), n of them lit
+  const R=48,r=19,cx=50,cy=52, pt=(rad,a)=>`${(cx+rad*Math.sin(a)).toFixed(1)},${(cy-rad*Math.cos(a)).toFixed(1)}`;
+  let w=""; for(let i=0;i<5;i++){ const a=i*2*Math.PI/5;
+    w+=`<polygon class="wedge ${i<n?"on":""} ${i===newIdx?"new":""}" points="${cx},${cy} ${pt(r,a-Math.PI/5)} ${pt(R,a)} ${pt(r,a+Math.PI/5)}"/>`; }
+  return `<svg class="kstar ${cls||""}" viewBox="0 0 100 104" width="${size}" height="${size}" aria-hidden="true">${w}</svg>`;
+}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition||null;
+function kpSpeak(t){ try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.rate=.92; speechSynthesis.speak(u); }catch(e){} }
+function kpSiblings(kidId){ return state.data.people.filter(p=>p.role==="child"&&p.id!==kidId); }
+function kpReset(kidId){ state.kp={kid:kidId,step:null,to:null,preset:null,text:"",method:"typed",listening:false,confirm:false,shown:null}; }
+function kpSync(){ const t=$("#kp-text"); if(t&&state.kp) state.kp.text=t.value; } // keep typed text across re-renders
+window.openKindness=(kidId)=>{ kpReset(kidId); state.page="kind:"+kidId; render(); };
+window.kpSeen=(kidId)=>{ for(const p of unseenPoints(state.data,kidId)) p.seen=true; save(); openKindness(kidId); };
+window.kpStart=()=>{ const sibs=kpSiblings(state.kp.kid); if(!sibs.length){ toast("Nobody to give a star point to yet"); return; } // the giver is whoever's column the chip lives in: no "tap your name" step
+  if(sibs.length===1){ state.kp.to=sibs[0].id; state.kp.step="reason"; } else state.kp.step="to"; render(); };
+window.kpMe=()=>kpStart(); // kept for older bookmarks of the flow
+window.kpTo=(id)=>{ state.kp.to=id; state.kp.step="reason"; render(); };
+window.kpPreset=(v)=>{ kpSync(); state.kp.preset=state.kp.preset===v?null:v; render(); };
+window.kpCancel=()=>{ kpReset(state.kp.kid); render(); };
+window.kpHear=()=>{ kpSync(); const r=kpReason(); if(!r){ toast("Pick a reason first"); return; } kpSpeak(`${nameOf(state.kp.to)} ${r}`); };
+window.kpRedo=()=>{ state.kp.text=""; state.kp.confirm=false; state.kp.method="typed"; render(); kpMic(); };
+window.kpMic=()=>{ kpSync();
+  if(!SR){ const t=$("#kp-text"); if(t) t.focus(); toast("Tap the box, then use the microphone on the keyboard"); return; }
+  let rec; try{ rec=new SR(); }catch(e){ toast("The microphone isn't available here"); return; }
+  // Interim results on: Safari often delivers words only as interim results and never marks them final, so we
+  // show whatever was heard live in the box and take the last transcript when recognition ends.
+  rec.lang="en-US"; rec.interimResults=true; rec.continuous=false; rec.maxAlternatives=1;
+  let heard="", err=null; state.kp.listening=true; state.kp.text=""; render();
+  rec.onresult=e=>{ let t=""; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript; heard=t.trim(); const box=$("#kp-text"); if(box) box.value=heard; };
+  rec.onerror=e=>{ err=e.error; console.warn("speech recognition error:",e.error,e.message||""); };
+  rec.onend=()=>{ if(!state.kp) return; state.kp.listening=false;
+    if(heard){ state.kp.text=heard; state.kp.method="voice"; state.kp.confirm=true; render(); kpSpeak(`You said: ${heard}. Is that right?`); return; }
+    render();
+    if(err==="not-allowed"||err==="service-not-allowed") toast("The microphone needs permission. Tap the box and use the keyboard mic instead.");
+    else if(err==="network") toast("Talking needs the internet. Tap the box and use the keyboard mic instead.");
+    else if(err!=="aborted") toast(`I didn't catch that${err?" ("+err+")":""}. Try again, or tap the box and use the keyboard mic.`); };
+  try{ rec.start(); }catch(e){ state.kp.listening=false; render(); toast("The microphone isn't available here"); }
+};
+function kpReason(){ const k=state.kp; return [k.preset,(k.text||"").trim()].filter(Boolean).join(" · "); }
+window.kpSend=()=>{ kpSync(); const k=state.kp, reason=kpReason(); if(!reason){ toast("Pick a reason, or say one"); return; }
+  const method=k.method==="voice"?"voice":(k.text||"").trim()?"typed":"preset";
+  const p=givePoint(state.data,k.kid,k.to,reason,k.preset,method); save();
+  k.step="show"; k.shown=p.id; k.confirm=false; render(); window.scrollTo({top:0,behavior:"smooth"});
+  const n=partialPoints(state.data,k.to); kpSpeak(`${nameOf(k.to)}! ${nameOf(k.kid)} gave you a star point for: ${reason}.${n===0?" That makes a whole star!":""}`); };
+window.kpDone=()=>{ kpReset(state.kp.kid); render(); };
+window.kpSayShown=()=>{ const p=(state.data.kindness||[]).find(x=>x.id===state.kp.shown); if(p) kpSpeak(`${nameOf(p.receiver)}! ${nameOf(p.giver)} gave you a star point for: ${p.reason}`); };
+window.kpSay=(id)=>{ const p=(state.data.kindness||[]).find(x=>x.id===id); if(!p) return; const me=state.kp.kid;
+  kpSpeak(p.receiver===me?`${nameOf(p.giver)} gave you a star point. ${nameOf(p.giver)} said: ${p.reason}`:`You gave ${nameOf(p.receiver)} a star point. You said: ${p.reason}`); };
+function afterKindnessRender(){ const k=state.kp; if(!k) return; if(k.scrolled!==k.step){ k.scrolled=k.step; window.scrollTo({top:0}); } }
+function renderKindnessPage(kidId){
+  const D=state.data, kid=D.people.find(p=>p.id===kidId);
+  if(!kid||kid.role!=="child"){ state.page=null; return ""; }
+  if(!state.kp||state.kp.kid!==kidId) kpReset(kidId);
+  ensureKindness(D); const k=state.kp, n=partialPoints(D,kidId), got=pointsReceived(D,kidId), gave=pointsGiven(D,kidId), stars=kindnessStars(D,kidId);
+  const top=(who)=>`<div class="top"><button class="backbtn" onclick="${k.step?"kpCancel()":"closePage()"}">← ${k.step?"Never mind":"Back"}</button><div class="who">${avatarHTML(who)}${who.name}</div><span></span></div>`;
+  let body;
+  if(k.step==="show"){ // the receiver's screen: turn the iPad toward them
+    const p=D.kindness.find(x=>x.id===k.shown), to=D.people.find(x=>x.id===(p?p.receiver:k.to)), nn=partialPoints(D,to.id), full=nn===0;
+    return `<div class="kidcol" style="--hue:${to.hue??350}"><div class="mp rp kp"><div class="top"><span></span><div class="who">${avatarHTML(to)}${to.name}</div><span></span></div>
+      <div class="mcard">
+        <h1>${to.name}!</h1><p style="font-size:1.35rem;color:var(--k-ink)"><b>${kid.name}</b> gave you a star point</p>
+        <div class="bigstar">${starWedges(full?5:nn,220,full?"full":"",full?4:nn-1)}<div class="count">${full?"⭐ That makes a whole star!":`${nn} <small>of 5</small>`}</div></div>
+        <div class="heard"><q>${(p?p.reason:"").replace(/</g,"&lt;")}</q><button class="hearbtn" onclick="kpSayShown()">🔊 Hear it</button></div>
+        ${full?`<p>It went in your star jar. Five more star points make the next one.</p>`:""}
+        <div class="actions"><button class="go" onclick="kpDone()">${full?"Yay!":"Thanks!"}</button></div>
+      </div></div></div>`;
+  }
+  if(k.step==="to") body=`<div class="mcard"><h1>Who gets it?</h1>
+      <div class="actions">${kpSiblings(kidId).map(s=>`<button class="whobtn" onclick="kpTo('${s.id}')">${avatarHTML(s)}${s.name}</button>`).join("")}</div>
+      <div class="actions"><button class="notnow" onclick="kpCancel()">Never mind</button></div></div>`;
+  else if(k.step==="reason"){ const to=nameOf(k.to);
+    body=`<div class="mcard"><h1>Why does ${to} get a star point?</h1><p>Tap one, or say it in your own words.</p>
+      <div class="chips">${KIND_PRESETS.map(v=>`<button class="${k.preset===v?"on":""}" onclick="kpPreset('${v}')">${to} ${v}</button>`).join("")}</div>
+      <div class="saybox"><textarea id="kp-text" placeholder="Or say it here… (there's a mic on the keyboard too)" maxlength="160" oninput="state.kp.text=this.value;state.kp.confirm=false">${(k.text||"").replace(/</g,"&lt;")}</textarea>
+        <button class="micbtn ${k.listening?"listening":""}" onclick="kpMic()" aria-label="Say it out loud">${k.listening?"👂":"🎤"}</button></div>
+      ${k.confirm?`<div class="heard"><span style="color:var(--k-muted)">You said</span><q>${(k.text||"").replace(/</g,"&lt;")}</q><div class="actions"><button class="go" onclick="kpSend()">Yes, send it ⭐</button><button class="notnow" onclick="kpRedo()">Try again</button></div></div>`
+        :`<div class="actions"><button class="hearbtn" onclick="kpHear()">🔊 Hear it</button></div><div class="actions"><button class="go" onclick="kpSend()">Give the star point ⭐</button><button class="notnow" onclick="kpCancel()">Never mind</button></div>`}
+    </div>`; }
+  else { // resting page: the star, the give button, the two lists
+    const sibs=kpSiblings(kidId), giveLabel=sibs.length===1?`Give ${sibs[0].name} a star point`:"Give a star point";
+    const rowGot=(p)=>`<div class="rrow" onclick="kpSay('${p.id}')"><div class="img">${starWedges(1,40)}</div><div class="info"><b>“${p.reason.replace(/</g,"&lt;")}”</b><span>${nameOf(p.giver)} said · ${md(p.date)}${p.method==="voice"?" · 🎤":""}</span></div></div>`;
+    const rowGave=(p)=>`<div class="rrow given" onclick="kpSay('${p.id}')"><div class="img">💛</div><div class="info"><b>“${p.reason.replace(/</g,"&lt;")}”</b><span>you said, to ${nameOf(p.receiver)} · ${md(p.date)}</span></div></div>`;
+    const gotList=[]; got.forEach((p,i)=>{ gotList.push(rowGot(p)); if((i+1)%5===0) gotList.push(`<div class="divider">⭐ Star complete!</div>`); });
+    body=`<div class="mcard">
+      <h1>My star points</h1>
+      <div class="bigstar">${starWedges(n,220)}<div class="count">${n} <small>of 5</small></div></div>
+      <p>${n===0?"Five star points make a whole star.":n===4?"One more and it's a whole star!":`${5-n} more make a whole star.`}${stars?` You've made ${stars} star${stars===1?"":"s"} from kindness so far.`:""}</p>
+      <div class="actions"><button class="go" onclick="kpStart()">💛 ${giveLabel}</button></div>
+      <div class="lanes" style="width:100%">
+        <div class="lane mine"><div class="lanehead">Stars I got</div>${gotList.length?gotList.reverse().join(""):`<p style="text-align:left">Nothing yet. Star points come from ${sibs.map(s=>s.name).join(" and ")||"your family"}.</p>`}<div class="totals">${got.length} star point${got.length===1?"":"s"} received</div></div>
+        <div class="lane shop"><div class="lanehead">Stars I gave</div>${gave.length?gave.slice().reverse().map(rowGave).join(""):`<p style="text-align:left">Notice something kind? Give a star point for it.</p>`}<div class="totals">${gave.length} star point${gave.length===1?"":"s"} given</div></div>
+      </div></div>`;
+  }
+  return `<div class="kidcol" style="--hue:${kid.hue??350}"><div class="mp rp kp">${top(kid)}${body}</div></div>`;
+}
+
+/* ---------- kindness: adult section (feed, send back, counts). Informational, never a To Review item ---------- */
+window.akSendBackAsk=(id)=>{ state.ak=state.ak||{}; state.ak.sendback=id; render(); setTimeout(()=>$("#ak-note")?.focus(),30); };
+window.akSendBackGo=(id)=>{ const note=$("#ak-note")?.value||""; returnPoint(state.data,id,note); state.ak.sendback=null; save(); render(); toast("Sent back. The star point no longer counts."); };
+window.akShowAll=()=>{ state.ak=state.ak||{}; state.ak.all=!state.ak.all; render(); };
+function renderAdultKindness(){
+  const D=state.data; ensureKindness(D); const kids=D.people.filter(p=>p.role==="child"); if(!kids.length) return "";
+  state.ak=state.ak||{sendback:null,all:false};
+  const counts=kids.map(k=>{ const got=pointsReceived(D,k.id).length, gave=pointsGiven(D,k.id).length; return `<span>${k.name}: gave <b>${gave}</b> · got <b>${got}</b> · ${partialPoints(D,k.id)}/5 toward the next star · <b>${kindnessStars(D,k.id)}</b> star${kindnessStars(D,k.id)===1?"":"s"} from kindness</span>`; }).join("");
+  const all=(D.kindness||[]).slice().sort((a,b)=>b.at.localeCompare(a.at)), feed=state.ak.all?all:all.slice(0,20);
+  const rows=feed.map(p=>`<div class="krow2 ${p.status==="returned"?"ret":""}"><span><b>${nameOf(p.giver)} → ${nameOf(p.receiver)}</b> · "${p.reason.replace(/</g,"&lt;")}"${p.method==="voice"?" 🎤":""}<div class="rmeta">${md(p.date)}${p.status==="returned"?` · sent back${p.returnedNote?`: ${p.returnedNote}`:""}`:p.seen?"":" · not seen yet"}</div></span>
+      <span class="btns">${p.status==="given"?(state.ak.sendback===p.id?`<input id="ak-note" placeholder="note (optional)" style="border:1px solid var(--line);border-radius:8px;padding:4px 8px"><button class="bad" onclick="akSendBackGo('${p.id}')">Send back</button><button onclick="state.ak.sendback=null;render()">Cancel</button>`:`<button class="bad" onclick="akSendBackAsk('${p.id}')">Send back</button>`):""}</span></div>`).join("");
+  return `<div class="sect" style="margin-top:14px"><h3>Kindness</h3><div class="card money-adult kind-adult">
+    <div class="bal" style="padding:10px 14px;flex-direction:column;gap:6px;align-items:flex-start">${counts}</div>
+    ${rows||`<div class="krow2"><span class="rmeta">No star points yet. Kids give them from the star-points door on their board.</span></div>`}
+    ${all.length>20?`<div class="note"><button onclick="akShowAll()">${state.ak.all?"Show recent":`Show all ${all.length}`}</button></div>`:""}
+    <div class="note">Points post the moment a kid gives one; nothing here waits on you. Send back only a point that wasn't real. Five points a kid receives derive one star, so sending one back can lower a star already counted.</div>
+  </div></div>`;
+}
+
 /* ---------- rewards: adult tab (requests, promises, catalog, star ledger) ---------- */
 window.arApprove=(id)=>{ const when=$("#ar-when-"+id)?.value||""; const note=$("#ar-note-"+id)?.value||""; approveRedemption(state.data,id,when,note); save(); render(); toast("Approved. Stars posted."); };
 window.arDecline=(id)=>{ const note=$("#ar-note-"+id)?.value||""; declineRedemption(state.data,id,note); save(); render(); toast("Declined. Stars released."); };
@@ -2768,9 +2954,12 @@ function renderAdultRewards(kids){
    ========================================================================= */
 const SUPA={ url:"https://uezrisrlatltsonafaoh.supabase.co", key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlenJpc3JsYXRsdHNvbmFmYW9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTM0NjYsImV4cCI6MjEwNDQ2OTQ2Nn0.OSN92ndpq6feSiV-uD74dAvYGNYLVHa3Vrknml7ssO4" /* anon key: public by design; RLS is the security */ };
 const CLOUD_TABLES={ people:"people", registry:"contributions", routines:"routines", instances:"instances", money:"money_transactions",
-  runs:"allowance_runs", goals:"goals", rewards:"rewards", redemptions:"redemptions", starLedger:"star_ledger", moneyClaims:"money_claims" };
+  runs:"allowance_runs", goals:"goals", rewards:"rewards", redemptions:"redemptions", starLedger:"star_ledger", moneyClaims:"money_claims",
+  kindness:"kindness_points" /* migration 002 */ };
+const TABLE_MIGRATION={ kindness_points:"002_kindness_points.sql" }; // tables added after 001: the board keeps working (locally) until the migration is run
 const STATE_KEYS=["settings","subMemory","log","version"];
-const cloud={ sb:null, fid:null, user:null, synced:{}, stateSynced:"", ready:false, pushing:false, again:false, status:"off", channel:null };
+const cloud={ sb:null, fid:null, user:null, synced:{}, stateSynced:"", ready:false, pushing:false, again:false, status:"off", channel:null, missing:{} };
+function missingTable(e){ const m=String(e?.message||e||""); return e?.code==="42P01"||e?.code==="PGRST205"||/does not exist|schema cache/i.test(m); }
 const uid=(p="")=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,7); // device-unique ids: several devices write at once
 
 function cloudAvailable(){ return typeof window.supabase?.createClient==="function"; }
@@ -2807,7 +2996,9 @@ async function cloudPull(){ // returns false when the family has no board yet
   const next={...fresh, ...st.data.doc, seq: local.seq||fresh.seq};
   cloud.stateSynced=JSON.stringify(pickState(st.data.doc));
   for(const [key,table] of Object.entries(CLOUD_TABLES)){
-    const rows=await fetchAll(table,fid); next[key]=rows.map(r=>r.doc);
+    let rows; try{ rows=await fetchAll(table,fid); }
+    catch(e){ if(!missingTable(e)) throw e; cloud.missing[table]=true; next[key]=local[key]||[]; cloud.synced[key]={}; console.warn(`cloud: table ${table} missing — run ${TABLE_MIGRATION[table]||"the migration"}; ${key} stays on this device`); continue; }
+    delete cloud.missing[table]; next[key]=rows.map(r=>r.doc);
     cloud.synced[key]=Object.fromEntries(rows.map(r=>[r.id,JSON.stringify(r.doc)]));
   }
   state.data=next; migrate(state.data); return true;
@@ -2827,6 +3018,7 @@ async function cloudPush(force){ // diff every collection against what this devi
   try{
     const sb=cloud.sb, fid=cloud.fid, D=state.data;
     for(const [key,table] of Object.entries(CLOUD_TABLES)){
+      if(cloud.missing[table]) continue; // stays local until the migration is run
       const cur=D[key]||[], seen=cloud.synced[key]||(cloud.synced[key]={}), ups=[], ids=new Set();
       for(const d of cur){ if(!d.id) d.id=uid(key[0]); ids.add(d.id); const j=JSON.stringify(d); if(seen[d.id]!==j){ ups.push({id:d.id,family_id:fid,doc:d}); seen[d.id]=j; } }
       const dels=Object.keys(seen).filter(id=>!ids.has(id));
@@ -2844,6 +3036,7 @@ function cloudSubscribe(){
   if(cloud.channel) sb.removeChannel(cloud.channel);
   const ch=sb.channel("family-"+fid);
   for(const [key,table] of Object.entries(CLOUD_TABLES)){
+    if(cloud.missing[table]) continue;
     ch.on("postgres_changes",{event:"*",schema:"public",table,filter:`family_id=eq.${fid}`},payload=>applyRemote(key,payload));
   }
   ch.on("postgres_changes",{event:"*",schema:"public",table:"board_state",filter:`family_id=eq.${fid}`},payload=>{
@@ -2881,7 +3074,7 @@ window.workOffline=()=>{ cloud.status="offline"; render(); };
 window.cloudSignOutClick=async()=>{ await cloudSignOut(); render(); };
 function cloudStatusLine(){
   const s=cloud.status;
-  if(s==="on") return `<span class="rmeta">☁️ Synced${cloud.live?" · live":""} · ${cloud.user?.email||""}</span> <button class="newbtn" onclick="cloudSignOutClick()">Sign out</button>`;
+  if(s==="on"){ const miss=Object.keys(cloud.missing); return `<span class="rmeta">☁️ Synced${cloud.live?" · live":""} · ${cloud.user?.email||""}${miss.length?` · <b>${miss.join(", ")} not in the cloud yet</b> (run ${miss.map(t=>TABLE_MIGRATION[t]||t).join(", ")} in Supabase, then Retry)`:""}</span> ${miss.length?`<button class="newbtn" onclick="cloudAttach().then(render)">Retry</button> `:""}<button class="newbtn" onclick="cloudSignOutClick()">Sign out</button>`; }
   if(s==="offline"||s==="signedout") return `<span class="rmeta">☁️ Not signed in · this device only</span> <button class="newbtn" onclick="cloud.status='signedout';render()">Sign in</button>`;
   if(s==="nolib") return `<span class="rmeta">☁️ Cloud library didn't load (offline?) · this device only</span>`;
   if(String(s).startsWith("error")) return `<span class="rmeta">☁️ Cloud error: ${String(s).slice(6)}</span> <button class="newbtn" onclick="cloudAttach().then(render)">Retry</button>`;
