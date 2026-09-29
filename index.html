@@ -1540,7 +1540,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.42.3 · picking a goal never auto-completes it";
+const BUILD="v0.42.4 · resync from the cloud when the page wakes up";
 const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
@@ -3411,9 +3411,18 @@ function cloudSubscribe(){
   ch.on("postgres_changes",{event:"*",schema:"public",table:"board_state",filter:`family_id=eq.${fid}`},payload=>{
     const doc=payload.new?.doc; if(!doc) return; const j=JSON.stringify(pickState(doc)); if(j===cloud.stateSynced) return;
     Object.assign(state.data,pickState(doc)); cloud.stateSynced=j; remoteRender(); });
-  ch.subscribe(status=>{ cloud.live=status==="SUBSCRIBED"; });
+  ch.subscribe(status=>{ cloud.live=status==="SUBSCRIBED"; if(status==="CLOSED"||status==="CHANNEL_ERROR"||status==="TIMED_OUT") scheduleResync(); }); // Safari drops the socket when the iPad sleeps
   cloud.channel=ch;
 }
+let resyncTimer=null, resyncing=false;
+function scheduleResync(){ clearTimeout(resyncTimer); resyncTimer=setTimeout(cloudResync,1500); }
+async function cloudResync(){ // v0.42.4: pull the family board again and re-open the live channel; used when the page comes back to the foreground or the channel drops
+  if(!cloud.ready||!cloud.sb||!cloud.fid||resyncing||cloud.pushing||document.visibilityState==="hidden"){ if(cloud.pushing) scheduleResync(); return; } resyncing=true;
+  try{ const ae=document.activeElement; if(ae&&(ae.tagName==="TEXTAREA"||ae.tagName==="INPUT")){ scheduleResync(); return; } // never clobber typing
+    if(await cloudPull()){ try{ localStorage.setItem(KEY,JSON.stringify(state.data)); }catch(e){} generateDay(state.data,state.now); generateRuns(state.data,state.now); render(); }
+    cloudSubscribe(); }
+  catch(e){ console.warn("cloud resync failed",e); }
+  finally{ resyncing=false; } }
 function applyRemote(key,payload){
   const D=state.data, seen=cloud.synced[key]||(cloud.synced[key]={});
   if(payload.eventType==="DELETE"){ const id=payload.old?.id; if(!id||!seen[id]) return; delete seen[id]; D[key]=(D[key]||[]).filter(d=>d.id!==id); remoteRender(); return; }
@@ -3467,7 +3476,8 @@ function cloudStatusLine(){
     shownDay=dk; if(!state.data) return false; // new calendar day: close out yesterday, create today's occurrences, redraw
     if(todayKey(state.cursor)<dk) state.cursor=new Date(state.now);
     generateDay(state.data,state.now); generateRuns(state.data,state.now); save(); render(); loadLunch().then(render); loadWeather(true).then(render); return true; };
-  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ if(!refreshNow()) loadWeather().then(render); } }); // same day: refresh the forecast if it's over an hour old
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ if(!refreshNow()) loadWeather().then(render); cloudResync(); } }); // back in the foreground: fresh forecast if stale, and the family board pulled again (an iPad that slept has a dead live channel)
+  window.addEventListener("online",()=>cloudResync());
   window.addEventListener("pageshow",refreshNow);
   setInterval(()=>{ // live timers — but never clobber text being typed
     if(refreshNow()) return;
