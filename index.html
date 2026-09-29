@@ -59,8 +59,7 @@ body.dashmode .topbar .toggle{display:none}
 .dash .tbtn{background:var(--k-accent);color:var(--k-ink);border-radius:999px;padding:8px 14px;font-family:"Fredoka";font-weight:700;font-size:.95rem;white-space:nowrap}
 .dash .tbtn.go{background:var(--money);color:#fff}
 .dash .tgoal{display:flex;align-items:center;gap:12px;background:var(--k-soft);border-radius:16px;padding:10px}
-.dash .tgoal .pic{width:84px;height:84px;border-radius:14px;background:#fff;display:grid;place-items:center;font-size:2.4rem;overflow:hidden;flex:none}
-.dash .tgoal.small .pic{width:56px;height:56px;font-size:1.8rem}
+.dash .tgoal .pic{width:62px;height:62px;border-radius:14px;background:#fff;display:grid;place-items:center;font-size:2rem;overflow:hidden;flex:none} /* one size on every tile, the height of a money jar box */
 .dash .tgoal .pic img{width:100%;height:100%;object-fit:cover}
 .dash .tgoal .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .dash .tgoal .info small{font-size:.8rem;color:var(--k-muted);text-transform:uppercase;letter-spacing:.04em}
@@ -473,6 +472,19 @@ a.chip{color:var(--adult)}
 .mp .rrowk2 .edit input{flex:1;min-width:140px;font-family:inherit;font-size:1.05rem;border:2px solid var(--k-main);border-radius:10px;padding:6px 8px}
 .mp .rrowk2 .edit .cancel{background:#fff;border-radius:999px;width:32px;height:32px}
 .mp .rrowk2.saving{background:var(--k-accent);box-shadow:0 0 0 3px var(--k-main) inset}
+.mp .rrowk2.pending{background:var(--money-soft);box-shadow:0 0 0 3px var(--money) inset}
+.mp .rrowk2.pending .num{font-size:1.2rem}
+.mp .rrowk2 .savebtn.quiet{background:#fff;font-weight:600}
+.mp .rwrap .trash.ghost{visibility:hidden}
+.mp .pendgoal{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:var(--money-soft);border:2px solid var(--money);border-radius:20px;padding:12px}
+.mp .pendgoal .img{width:72px;height:72px;border-radius:16px;background:#fff;display:grid;place-items:center;font-size:2.2rem;overflow:hidden;flex:none}
+.mp .pendgoal .img img{width:100%;height:100%;object-fit:cover}
+.mp .pendgoal .info{display:flex;flex-direction:column;gap:2px} .mp .pendgoal .info small{font-size:.8rem;color:#1f6b36;text-transform:uppercase;letter-spacing:.04em} .mp .pendgoal .info b{font-size:1.15rem} .mp .pendgoal .info span{font-size:.9rem;color:var(--k-muted)}
+.money-adult .gtable select.st{font-family:inherit;font-size:.85rem;border:1px solid var(--line);border-radius:8px;padding:4px 6px}
+.money-adult .gtable select.st-active{border-color:var(--ok);font-weight:600} .money-adult .gtable select.st-claimed{border-color:var(--money);background:var(--money-soft);font-weight:600} .money-adult .gtable select.st-dropped{color:var(--muted)}
+.money-adult .logrow{display:inline-flex;align-items:center;gap:4px;margin-right:6px}
+.money-adult details.archive{margin-top:10px} .money-adult details.archive summary{cursor:pointer;font-weight:600;font-size:.9rem;padding:6px 8px;color:var(--muted)}
+.money-adult .gtable tr.ro td{color:var(--muted)}
 /* ideas: steps fold out under the row */
 .mp .rrowk2.open{flex-wrap:wrap}
 .mp .rrowk2 .stepsbtn.on{background:#fff}
@@ -898,8 +910,24 @@ function needsRegen(data,kidId,row){ const li=lastInterestDate(data,kidId); retu
 /* ---- goals (money currency in this build) ---- */
 function goalsFor(data,kidId){ return data.goals.filter(g=>g.kid===kidId); }
 function activeGoal(data,kidId){ return goalsFor(data,kidId).find(g=>g.status==="active"&&g.currency==="money"); }
-function achievedUnbought(data,kidId){ return goalsFor(data,kidId).filter(g=>g.status==="achieved"&&!data.money.some(r=>r.goalId===g.id&&r.type==="purchase")); }
-function affordableActive(data,kidId){ const g=activeGoal(data,kidId); return g&&g.target!=null&&balances(data,kidId).save>=g.target?g:null; } // enough saved, but the goal hasn't fired: the adult can record the purchase whenever the family decides
+/* goal lifecycle (v0.43): wishlist → active → claimed (kid has enough and says "get it"; the price is set aside on their side) → purchased (adult logs the real purchase; read-only archive). dropped is the trash. */
+function pendingGoals(data,kidId){ return goalsFor(data,kidId).filter(g=>g.status==="claimed"&&g.currency==="money").sort((a,b)=>(a.claimedAt||"").localeCompare(b.claimedAt||"")); }
+function achievedUnbought(data,kidId){ return pendingGoals(data,kidId); } // legacy name: what the kid is getting, not yet logged by the adult
+function holds(data,kidId){ return r2(pendingGoals(data,kidId).reduce((s,g)=>s+(g.target||0),0)); } // money set aside for claimed wishes: shown as gone on the kid's side, still in the ledger until the purchase row
+function kidBalances(data,kidId){ const b=balances(data,kidId); b.save=r2(b.save-holds(data,kidId)); return b; } // what the kid sees
+function affordableActive(data,kidId){ const g=activeGoal(data,kidId); return g&&g.target!=null&&kidBalances(data,kidId).save>=g.target?g:null; }
+function claimGoal(data,goalId){ const g=data.goals.find(x=>x.id===goalId); if(!g||g.status!=="active"||g.target==null||kidBalances(data,g.kid).save<g.target) return false; g.status="claimed"; g.claimedAt=todayKey(new Date()); return true; }
+function unclaimGoal(data,goalId){ const g=data.goals.find(x=>x.id===goalId); if(!g||g.status!=="claimed") return; delete g.claimedAt; if(activeGoal(data,g.kid)){ g.status="wishlist"; g.rank=-1; renumber(data,g.kid); } else g.status="active"; }
+function setGoalStatus(data,goalId,st){ // adult control until the purchase is logged; purchased only via recordPurchase
+  const g=data.goals.find(x=>x.id===goalId); if(!g||g.status==="purchased"||!["wishlist","active","claimed","dropped"].includes(st)) return false;
+  if(st==="active"){ if(g.occasion) return false; const cur=activeGoal(data,g.kid); if(cur&&cur.id!==g.id){ cur.status="wishlist"; cur.rank=-1; } g.status="active"; g.activatedAt=todayKey(new Date()); delete g.claimedAt; }
+  else if(st==="claimed"){ if(g.target==null) return false; g.status="claimed"; g.claimedAt=todayKey(new Date()); }
+  else if(st==="wishlist"){ g.status="wishlist"; g.rank=99; delete g.claimedAt; }
+  else { g.status="dropped"; g.droppedAt=todayKey(new Date()); delete g.claimedAt; }
+  renumber(data,g.kid); return true; }
+function deleteGoal(data,goalId){ const g=data.goals.find(x=>x.id===goalId); if(!g) return; data.goals=data.goals.filter(x=>x.id!==goalId); renumber(data,g.kid); } // gone from every view; a purchase row, if any, stays in the ledger
+function copyGoal(data,goalId){ const g=data.goals.find(x=>x.id===goalId); if(!g) return null; const n=addWish(data,g.kid,g.title,g.emoji); for(const k of ["image","url","notes","target","occasion"]) if(g[k]!==undefined&&g[k]!==null) n[k]=g[k]; if(n.occasion){ n.rank=99; renumber(data,g.kid); } return n; }
+function migrateGoalStatuses(data){ for(const g of data.goals||[]){ if(g.status==="achieved"&&g.currency==="money"){ const bought=(data.money||[]).some(r=>r.goalId===g.id&&r.type==="purchase"); g.status=bought?"purchased":"claimed"; if(bought) g.purchasedAt=g.purchasedAt||g.achievedAt; else g.claimedAt=g.claimedAt||g.achievedAt; } } }
 function wishlist(data,kidId){ return goalsFor(data,kidId).filter(g=>g.status==="wishlist"&&g.currency==="money").sort((a,b)=>(a.rank??99)-(b.rank??99)); }
 /* occasions (schema v1.11): a wish can be flagged for an occasion (birthday, Christmas) instead of allowance; flagged wishes sit in their own section, numbered from 1, and can't become a savings goal */
 function occasions(data){ return (data||state.data).settings.occasions||[]; }
@@ -924,15 +952,11 @@ function activateGoal(data,goalId){ // one active per currency per child, enforc
 function renumber(data,kidId){ for(const occ of [null,...occasions(data).map(o=>o.id)]) wishSection(data,kidId,occ).forEach((g,i)=>g.rank=i); } // each section numbers from 1
 function moveWish(data,goalId,dir){ const g=data.goals.find(x=>x.id===goalId); const list=wishSection(data,g.kid,g.occasion); const i=list.indexOf(g), j=i+dir; if(j<0||j>=list.length) return; list[i].rank=j; list[j].rank=i; }
 function dropGoal(data,goalId){ const g=data.goals.find(x=>x.id===goalId); if(!g) return; g.status="dropped"; g.droppedAt=todayKey(new Date()); renumber(data,g.kid); }
-function checkGoals(data,kidId){ // achieved fires when save ≥ target after a money event (run completion, ledger line); never on activation or pricing. The purchase row (adult) closes it
-  const g=activeGoal(data,kidId); if(!g) return null;
-  if(g.target!=null&&balances(data,kidId).save>=g.target){ g.status="achieved"; g.achievedAt=todayKey(new Date()); return g; }
-  return null;
-}
+function checkGoals(data,kidId){ return affordableActive(data,kidId); } // v0.43: never changes status; the kid claims, the adult logs
 function recordPurchase(data,goalId,amount,date){
   const g=data.goals.find(x=>x.id===goalId); if(!g) return null;
   const row=addRow(data,{kid:g.kid,date:date||todayKey(new Date()),acct:"save",amt:-Math.abs(amount),type:"purchase",goalId:g.id,note:g.title});
-  if(g.status!=="achieved"){ g.status="achieved"; g.achievedAt=row.date; }
+  g.status="purchased"; g.purchasedAt=row.date; g.paid=r2(Math.abs(amount)); delete g.claimedAt; // read-only from here
   return row;
 }
 
@@ -1414,7 +1438,7 @@ function migrate(data){
   delete S.kidDailyClaimCap;
   for(const i of data.instances) if(!i.id) i.id=uid("i");
   for(const r of data.routines) if(!r.id) r.id=uid("r_");
-  ensureMoney(data); ensureClaims(data); ensureKindness(data); ensureIdeas(data);
+  ensureMoney(data); ensureClaims(data); ensureKindness(data); ensureIdeas(data); migrateGoalStatuses(data);
   seedRewards(data);
   migrateStars(data);
   data.version="1.5";
@@ -1541,7 +1565,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.42.5 · dashboard shows a reached goal; version and sync state under the tiles";
+const BUILD="v0.43 · claim a wish, log the purchase, full adult control of wish rows";
 const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
@@ -1660,14 +1684,14 @@ function dashUrl(kid){ const u=new URL(location.href); if(kid) u.searchParams.se
 function renderDashboard(kid,dk){
   const D=state.data, P=renderKidCol(kid,dk,{parts:true}), others=D.people.filter(p=>p.role==="child"&&p.id!==kid.id);
   // wishes: the hero tile
-  const got=achievedUnbought(D,kid.id)[0], g=activeGoal(D,kid.id); // same priority as the money page: a reached goal waiting to be bought comes first
+  const pend=pendingGoals(D,kid.id), g=activeGoal(D,kid.id); // pending purchases first, then the active wish, else "pick one"
   const save=P.kb.save, pct=g&&g.target!=null?Math.min(100,Math.round(save/g.target*100)):0;
   const wishTile=`<div class="dtile wishes" role="button" onclick="openMoney('${kid.id}','wish')">
     <div class="th"><span>❤️ My wishes</span><span class="chev">›</span></div>
-    ${got?`<div class="tgoal"><div class="pic">${goalIcon(got)}</div><div class="info"><small>You did it!</small><b>${got.title}</b><span>${got.onHand?"Mom has it ready for you.":"Time to go get it."}</span></div></div>`:""}
-    ${g?`<div class="tgoal"><div class="pic">${goalIcon(g)}</div><div class="info"><small>Saving for</small><b>${g.title}</b><span>${g.target!=null?`${fmtMoneyC(save)} of ${fmtMoneyC(g.target)}`:`${fmtMoneyC(save)} saved · Mom is adding the price`}</span><div class="bar"><div style="width:${pct}%"></div></div></div></div>`
-      :got?"":`<div class="tgoal none"><div class="pic">?</div><div class="info"><b>No goal yet</b><span>Tap a wish and "Save for this"</span></div></div>`}
-    </div>`; // just the current goal and its status; the full list is one tap away
+    ${pend.map(x=>`<div class="tgoal"><div class="pic">${goalIcon(x)}</div><div class="info"><small>Getting it!</small><b>${x.title}</b><span>${x.onHand?"Mom has it ready for you.":"Mom is getting it."}</span></div></div>`).join("")}
+    ${g?`<div class="tgoal"><div class="pic">${goalIcon(g)}</div><div class="info"><small>Saving for</small><b>${g.title}</b><span>${g.target!=null?`${fmtMoneyC(save)} of ${fmtMoneyC(g.target)}${save>=g.target?" · you have enough!":""}`:`${fmtMoneyC(save)} saved · Mom is adding the price`}</span><div class="bar"><div style="width:${pct}%"></div></div></div></div>`
+      :`<div class="tgoal none"><div class="pic">?</div><div class="info"><b>No wish yet</b><span>Pick one to save for</span></div></div>`}
+    </div>`; // the full list is one tap away
   // money
   const moneyTile=`<div class="dtile money" role="button" onclick="openMoney('${kid.id}')">
     <div class="th"><span>💰 My money</span><span class="thr"><b class="${P.moneyPop?"pop":""}">${fmtMoney(P.kidTotal)}</b><span class="chev">›</span></span></div>
@@ -1678,15 +1702,15 @@ function renderDashboard(kid,dk){
   const sg=starGoal(D,kid.id), avail=P.starsNow, spct=sg?Math.min(100,Math.round(avail/sg.target*100)):0;
   const starTile=`<div class="dtile stars">
     <div class="th" role="button" onclick="openRewards('${kid.id}')"><span>⭐ My stars</span><span class="thr"><b class="${P.starPop?"pop":""}">${avail}${P.pendStars?`<small title="being checked">+${P.pendStars}</small>`:""}</b><span class="chev">›</span></span></div>
-    ${sg?`<div class="tgoal small" role="button" onclick="openRewards('${kid.id}')"><div class="pic">${sg.emoji||"🎁"}</div><div class="info"><small>Saving up for</small><b>${sg.title}</b><span>${avail} of ${sg.target} ★</span><div class="bar"><div style="width:${spct}%"></div></div></div></div>`:""}
+    ${sg?`<div class="tgoal" role="button" onclick="openRewards('${kid.id}')"><div class="pic">${sg.emoji||"🎁"}</div><div class="info"><small>Saving up for</small><b>${sg.title}</b><span>${avail} of ${sg.target} ★</span><div class="bar"><div style="width:${spct}%"></div></div></div></div>`:""}
     <div class="tkind" role="button" onclick="openKindness('${kid.id}')">${starWedges(P.partial,44,P.kindPop?"pop":"")}<div class="info"><b>Star points <span>${P.partial}<small>/5</small></span></b><span>${5-P.partial} more make a star</span></div><span class="chev">›</span></div>
     ${others.length?`<div class="trow">${others.map(o=>`<button class="tbtn" onclick="openKindnessGive('${kid.id}','${o.id}')">💛 Give ${o.name} a star point</button>`).join("")}</div>`:""}
     ${P.unseen.length?`<div class="kindbanner small"><span>💛 ${[...new Set(P.unseen.map(x=>x.giver))].map(nameOf).join(" and ")} gave you ${P.unseen.length===1?"a star point":P.unseen.length+" star points"}!</span><button onclick="kpSeen('${kid.id}')">See it</button></div>`:""}</div>`;
   const ideas=openIdeas(D,kid.id), top1=ideas[0];
   const ideaTile=`<div class="dtile ideas" role="button" onclick="openIdeasPage('${kid.id}')">
     <div class="th"><span>💡 My ideas</span><span class="thr">${ideas.length?`<b>${ideas.length}</b>`:""}<span class="chev">›</span></span></div>
-    ${top1?`<div class="tgoal small"><div class="pic">${ideaIcon(top1)}</div><div class="info"><small>Next up</small><b>${top1.title}</b><span>${stepsLine(top1)}</span>${(top1.steps||[]).length?`<div class="bar"><div style="width:${Math.round((top1.steps.filter(s=>s.done).length/top1.steps.length)*100)}%"></div></div>`:""}</div></div>`
-      :`<div class="tgoal none small"><div class="pic">?</div><div class="info"><b>No ideas yet</b><span>Something to build, make, or do</span></div></div>`}</div>`;
+    ${top1?`<div class="tgoal"><div class="pic">${ideaIcon(top1)}</div><div class="info"><small>Next up</small><b>${top1.title}</b><span>${stepsLine(top1)}</span>${(top1.steps||[]).length?`<div class="bar"><div style="width:${Math.round((top1.steps.filter(s=>s.done).length/top1.steps.length)*100)}%"></div></div>`:""}</div></div>`
+      :`<div class="tgoal none"><div class="pic">?</div><div class="info"><b>No ideas yet</b><span>Something to build, make, or do</span></div></div>`}</div>`;
   const switcher=`<span class="switch">${others.map(o=>`<a href="${dashUrl(o)}">${o.name}</a>`).join("")}<a href="${dashUrl(null)}" title="Grown-up view">Everyone</a></span>`;
   return `<div class="kidcol dash" style="--hue:${kid.hue??350}">
     <div class="kidhead" style="background:var(--k-main)">
@@ -2181,7 +2205,7 @@ function renderKidCol(kid,dk,opts={}){
   const extraHTML=`<div class="card xcard"><header><h3>Extra stars</h3><span class="rmeta" style="margin-left:8px">if you want to, for extra ⭐</span></header>
     ${group("Up for grabs","⭐",grabs)}${group("Waiting for a grown-up","✓?",waiting)}${group("Done today","✓",doneX)}
     ${!grabs&&!waiting&&!doneX?`<div class="empty">Nothing extra right now.</div>`:""}</div>`;
-  const kb=balances(D,kid.id), kidTotal=kb.spend+kb.save+kb.share+kb.holding, pendRun=pendingRuns(D,kid.id)[0];
+  const kb=kidBalances(D,kid.id), kidTotal=r2(kb.spend+kb.save+kb.share+kb.holding), pendRun=pendingRuns(D,kid.id)[0];
   const starsNow=availableStars(D,kid.id), pendStars=pendingStars(D,kid.id), partial=partialPoints(D,kid.id), unseen=unseenPoints(D,kid.id);
   state.lastJar=state.lastJar||{}; const last=state.lastJar[kid.id]||{}; // the jars jump only when their number changes, never on navigation
   const starPop=last.stars!==undefined&&last.stars!==starsNow, moneyPop=last.money!==undefined&&last.money!==kidTotal, kindPop=last.partial!==undefined&&last.partial!==partial;
@@ -2731,8 +2755,8 @@ window.openMoney=(kidId,mode)=>{ generateRuns(state.data,state.now);
   state.mp={kid:kidId,mode:mode||(pend.length?"run":"rest"),step:0,moves:[],filter:"all",shown:8};
   state.page="money:"+kidId; save(); render(); };
 window.mpMode=(mode)=>{ state.mp.mode=mode; state.mp.moves=[]; render(); };
-function mpBal(){ // ledger balances plus the moves not yet written
-  const b=balances(state.data,state.mp.kid);
+function mpBal(){ // the kid's balances (money set aside for a claimed wish already gone) plus the moves not yet written
+  const b=kidBalances(state.data,state.mp.kid);
   for(const m of state.mp.moves){ b[m.from]=r2(b[m.from]-m.amt); b[m.to]=r2(b[m.to]+m.amt); }
   return b;
 }
@@ -2761,6 +2785,9 @@ window.mpDragStart=(ev)=>{ // drag $1 from the waiting jar onto Spend or Save; d
     if(j) mpTapJar(j.dataset.jar); };
   move(ev); addEventListener("pointermove",move); addEventListener("pointerup",end); addEventListener("pointercancel",end); };
 window.mpMove=(from,to)=>{ const b=mpBal(); if(b[from]<1) return; state.mp.moves.push({from,to,amt:1}); state.mp.bump=to; render(); };
+window.mpClaim=(id)=>{ if(claimGoal(state.data,id)){ save(); render(); toast("🎉 Mom will get it for you!"); } else toast("Not quite enough yet"); };
+window.mpClaimRun=(id)=>{ if(claimGoal(state.data,id)){ save(); } state.mp.step=5; render(); }; // on allowance day: claim, then pick the next thing to save for
+window.mpUnclaim=(id)=>{ unclaimGoal(state.data,id); save(); render(); };
 window.mpPick=(goalId)=>{ if(goalId){ if(!activateGoal(state.data,goalId)){ toast("That one isn't a saving goal"); return; } } state.mp.step=6; state.mp.mode="rest"; save(); render(); };
 window.mpAddWish=()=>{ const t=$("#mp-wtitle").value.trim(); if(!t){ toast("What is it called?"); return; }
   const g=addWish(state.data,state.mp.kid,t,state.mp.emoji||WISH_ICON); if(state.mp.photo) g.image=state.mp.photo; state.mp.emoji=null; state.mp.photo=null; state.mp.pickOpen=false; state.mp.title=""; save(); render(); toast("Added to your wish list"); };
@@ -2851,15 +2878,14 @@ function renderRunStep(kid,run){
         :`<button class="go" onclick="mpNext()">Done</button><button class="notnow" onclick="mpNext()">No thanks</button>`}</div>`; }
     case 3: { let row=mp.interest&&D.money.find(r=>r.id===mp.interest);
       if(!row){ row=completeRun(D,run,"kid"); mp.interest=row.id; mp.bump="save"; save(); }
-      const b2=balances(D,kid.id);
+      const b2=kidBalances(D,kid.id);
       return `<div class="head"><h1>Your save money grew!</h1></div><div class="big">+${fmtMoneyC(row.amt)}</div><p>You saved ${fmtMoneyC(row.base)} and it earned ${Math.round(row.rate*100)}% interest.</p>
       ${jarsHTML(b2,{})}<div class="actions"><button class="go" onclick="mpNext()">Nice!</button></div>`; }
-    case 4: { const got=achievedUnbought(D,kid.id)[0], g=got||activeGoal(D,kid.id);
+    case 4: { const g=activeGoal(D,kid.id), can=!!affordableActive(D,kid.id);
       if(!g){ mp.step=5; return renderRunStep(kid,run); }
-      const note=got?(g.onHand?"Mom has it ready for you.":"Time to go get it."):null;
       setTimeout(()=>{ const bar=document.querySelector(".mp .bar div"); if(bar) bar.style.width=bar.dataset.pct+"%"; },30);
-      return `<div class="head"><h1>${got?"You did it!":"Your goal"}</h1></div>${goalHTML(kid,g,note)}
-      <div class="actions"><button class="go" onclick="${got?"mpNext()":"mpPick('')"}">${got?"Get it!":"Okay"}</button></div>`; }
+      return `<div class="head"><h1>${can?"You have enough!":"Your goal"}</h1></div>${goalHTML(kid,g,can?"Want to get it now, or keep saving?":"")}
+      <div class="actions">${can?`<button class="go" onclick="mpClaimRun('${g.id}')">🎉 Get it!</button><button class="notnow" onclick="mpPick('')">Keep saving</button>`:`<button class="go" onclick="mpPick('')">Okay</button>`}</div>`; }
     case 5: { const list=allowanceWishes(D,kid.id);
       return `<div class="head"><h1>What's next?</h1><p>Pick something to save for, or not yet. Both are fine.</p></div>
       <div class="wish">${list.map(g=>`<button class="wbtn" onclick="mpPick('${g.id}')"><div class="img">${goalIcon(g)}</div>${g.title}<span class="price">${g.target==null?"Mom will add the price":fmtMoney(g.target)}</span></button>`).join("")}
@@ -2868,19 +2894,19 @@ function renderRunStep(kid,run){
   }
 }
 function goalHTML(kid,g,note){
-  const save=balances(state.data,kid.id).save, priced=g.target!=null, pct=priced?Math.min(100,Math.round(save/g.target*100)):0;
+  const save=kidBalances(state.data,kid.id).save, priced=g.target!=null, pct=priced?Math.min(100,Math.round(save/g.target*100)):0;
   return `<div class="goal"><div class="img">${goalIcon(g)}</div><div class="info"><b>${g.title}</b><span>${priced?`${fmtMoneyC(save)} of ${fmtMoneyC(g.target)}`:`You have ${fmtMoneyC(save)} saved. Mom is adding the price.`}</span><div class="bar"><div data-pct="${pct}" style="width:0"></div></div></div></div>
-    <p>${note||(priced?(pct>=100?"You have enough! Talk to Mom about getting it.":"You are "+pct+"% there."):"Keep saving!")}</p>`;
+    <p>${note||(priced?(pct>=100?"You have enough!":"You are "+pct+"% there."):"Keep saving!")}</p>${!note&&priced&&pct>=100?`<div class="actions"><button class="go" onclick="mpClaim('${g.id}')">🎉 Get it!</button></div>`:""}`;
 }
 function renderResting(kid){
-  const D=state.data, b=balances(D,kid.id), run=mpRun(), got=achievedUnbought(D,kid.id)[0], g=activeGoal(D,kid.id);
+  const D=state.data, b=kidBalances(D,kid.id), run=mpRun(), pend=pendingGoals(D,kid.id), g=activeGoal(D,kid.id);
   const runs=runsFor(D,kid.id), last=runs[runs.length-1];
   const thisWeek=last&&last.status==="complete"&&!run&&daysBetween(last.date,todayKey(state.now))<7;
   setTimeout(()=>{ const bar=document.querySelector(".mp .bar div"); if(bar) bar.style.width=bar.dataset.pct+"%"; },30);
   return `${run?`<div class="head"><h1>Allowance day!</h1><p>Your money for ${dowName(dowOfKey(run.date))} ${md(run.date)} is ready.</p></div><div class="actions"><button class="go" onclick="mpMode('run')">Let's go</button></div>`
       :thisWeek?`<div class="banner">All done for this week!</div>`:`<div class="head"><h1>My money</h1></div>`}
-    ${got?`<h2 style="font-size:1.3rem;margin:0">You reached your goal!</h2>${goalHTML(kid,got,got.onHand?"Mom has it ready for you.":"Time to go get it.")}`
-      :g?`<h2 style="font-size:1.3rem;margin:0">Saving for</h2>${goalHTML(kid,g,null)}`
+    ${pend.map(x=>`<div class="pendgoal"><div class="img">${goalIcon(x)}</div><div class="info"><small>Getting it!</small><b>${x.title}</b><span>${x.onHand?"Mom has it ready for you.":"Mom is getting it."} ${fmtMoneyC(x.target)} is set aside.</span></div></div>`).join("")}
+    ${g?`<h2 style="font-size:1.3rem;margin:0">Saving for</h2>${goalHTML(kid,g,null)}`
       :`<div class="goal"><div class="img">?</div><div class="info"><b>No goal yet</b><span>That's okay. Pick one any time from your wish list.</span></div></div>`}
     ${jarsHTML(b,{waiting:b.holding>0})}
     ${chartHTML(kid)}
@@ -2907,17 +2933,18 @@ window.mpGotMoney=()=>{ const v=parseFloat($("#mp-gotamt").value), from=$("#mp-g
 function rankedRow(o){ // one row of a kid's ranked list: number · picture · title + subline · action · tags · ▲▼, then the trash can outside the card so small fingers don't hit it by accident. Shared by the wish list and, next, the ideas list.
   return `<div class="rwrap"><div class="rrowk2 ${o.cls||""}"><div class="num">${o.n}</div><div class="pic">${o.pic}</div><div class="txt"><b>${o.title}</b>${o.sub?`<span>${o.sub}</span>`:""}</div>
     ${o.action||""}${o.tags||""}<span class="rank"><button onclick="${o.up}" ${o.first?"disabled":""} aria-label="Move up">▲</button><button onclick="${o.down}" ${o.last?"disabled":""} aria-label="Move down">▼</button></span>${o.body||""}</div>
-    <button class="trash ${o.confirm?"sure":""}" onclick="${o.drop}" title="Remove" aria-label="Remove">${o.confirm?"Sure?":"🗑"}</button></div>`; }
+    ${o.nodrop?`<span class="trash ghost" aria-hidden="true"></span>`:`<button class="trash ${o.confirm?"sure":""}" onclick="${o.drop}" title="Remove" aria-label="Remove">${o.confirm?"Sure?":"🗑"}</button>`}</div>`; }
 function rankedListHTML(rows,empty){ return `<div class="rlist">${rows.length?rows.join(""):`<p class="empty">${empty}</p>`}</div>`; }
-function wishRows(kid,list){ const D=state.data, occs=occasions(D), save=balances(D,kid.id).save;
-  return list.map((w,i)=>{ const active=w.status==="active", editing=state.mp.editing===w.id;
+function wishRows(kid,list){ const D=state.data, occs=occasions(D), save=kidBalances(D,kid.id).save;
+  const pendN=list.filter(w=>w.status==="claimed").length;
+  return list.map((w,i)=>{ const active=w.status==="active", pending=w.status==="claimed", editing=state.mp.editing===w.id, can=active&&w.target!=null&&save>=w.target;
     const title=editing?`<span class="edit"><input id="mp-edit-${w.id}" value="${(w.title||"").replace(/"/g,"&quot;")}" maxlength="40" onkeydown="if(event.key==='Enter')mpEditSave('${w.id}')"><button class="savebtn" onclick="mpEditSave('${w.id}')">Save</button><button class="cancel" onclick="mpEditCancel()">✕</button></span>`
       :`<button class="titlebtn" onclick="mpEdit('${w.id}')" title="Fix the name">${w.title} <small>✏️</small></button>`;
-    return rankedRow({n:i+1,pic:goalIcon(w),title,cls:active?"saving":"",
-      sub:editing?"":active?`Saving for this · ${w.target!=null?`${fmtMoneyC(save)} of ${fmtMoneyC(w.target)}`:`${fmtMoneyC(save)} saved, Mom is adding the price`}`:w.occasion?"":(w.target==null?"Mom will add the price":fmtMoney(w.target)),
-      action:active?`<span class="savingtag">Saving ✓</span>`:w.occasion?"":`<button class="savebtn" onclick="mpSaveFor('${w.id}')">Save for this</button>`,
-      tags:active?"":`<span class="tags">${occs.map(o=>`<button class="${w.occasion===o.id?"on":""}" onclick="mpFlag('${w.id}','${w.occasion===o.id?"":o.id}')" title="${w.occasion===o.id?"Back to my wish list":"Ask for this for "+o.name}" aria-label="${o.name}">${o.icon}</button>`).join("")}</span>`,
-      up:`mpMoveWish('${w.id}',-1)`,down:`mpMoveWish('${w.id}',1)`,first:i===0||active||(i===1&&list[0].status==="active"),last:i===list.length-1||active,drop:`mpDrop('${w.id}')`,confirm:state.confirmDel==="goal:"+w.id}); }); }
+    return rankedRow({n:pending?"🛍":i+1-pendN,pic:goalIcon(w),title,cls:pending?"pending":active?"saving":"",
+      sub:editing?"":pending?`Getting it! ${w.onHand?"Mom has it ready.":"Mom is getting it."} ${fmtMoneyC(w.target)} set aside`:active?`Saving for this · ${w.target!=null?`${fmtMoneyC(save)} of ${fmtMoneyC(w.target)}`:`${fmtMoneyC(save)} saved, Mom is adding the price`}`:w.occasion?"":(w.target==null?"Mom will add the price":fmtMoney(w.target)),
+      action:pending?`<button class="savebtn quiet" onclick="mpUnclaim('${w.id}')">Never mind</button>`:can?`<button class="savebtn" onclick="mpClaim('${w.id}')">🎉 Get it!</button>`:active?`<span class="savingtag">Saving ✓</span>`:w.occasion?"":`<button class="savebtn" onclick="mpSaveFor('${w.id}')">Save for this</button>`,
+      tags:active||pending?"":`<span class="tags">${occs.map(o=>`<button class="${w.occasion===o.id?"on":""}" onclick="mpFlag('${w.id}','${w.occasion===o.id?"":o.id}')" title="${w.occasion===o.id?"Back to my wish list":"Ask for this for "+o.name}" aria-label="${o.name}">${o.icon}</button>`).join("")}</span>`,
+      up:`mpMoveWish('${w.id}',-1)`,down:`mpMoveWish('${w.id}',1)`,first:pending||active||i<=pendN||(list[i-1]&&list[i-1].status!=="wishlist"),last:pending||active||i===list.length-1,drop:pending?"":`mpDrop('${w.id}')`,nodrop:pending,confirm:state.confirmDel==="goal:"+w.id}); }); }
 window.mpEdit=(id)=>{ state.mp.editing=id; render(); setTimeout(()=>{ const i=$("#mp-edit-"+id); if(i){ i.focus(); i.select(); } },50); };
 window.mpEditCancel=()=>{ state.mp.editing=null; render(); };
 window.mpEditSave=(id)=>{ const g=state.data.goals.find(x=>x.id===id), v=($("#mp-edit-"+id)?.value||"").trim(); if(g&&v) g.title=v; state.mp.editing=null; save(); render(); };
@@ -2928,7 +2955,7 @@ function renderWishPage(kid){
   // v0.39: the add form comes first (a kid opening this page usually has a specific thing in mind), the shelf of wishes below it
   return `<div class="head"><h1>My wish list</h1><p>Add anything you'd like to save for.</p></div>
     ${pickerHTML("mp",WISH_ICON,"What is it?","mpAddWish")}
-    ${rankedListHTML(wishRows(kid,[...(g?[g]:[]),...allowanceWishes(D,kid.id)]),"Nothing yet. Add something you'd like to save for.")}
+    ${rankedListHTML(wishRows(kid,[...pendingGoals(D,kid.id),...(g?[g]:[]),...allowanceWishes(D,kid.id)]),"Nothing yet. Add something you'd like to save for.")}
     ${occasions(D).map(o=>{ const sec=wishSection(D,kid.id,o.id); return sec.length?`${occasionHead(kid,o)}${rankedListHTML(wishRows(kid,sec),"")}`:""; }).join("")}
     <div class="actions"><button class="notnow" onclick="closePage()">← My board</button><button class="notnow" onclick="mpMode('rest')">💰 My money</button></div>`;
 }
@@ -3015,6 +3042,9 @@ window.amImportRows=()=>{ // one-time ledger import (allowance-import.json from 
   inp.click(); };
 window.amGoalField=(id,f,v)=>{ const g=state.data.goals.find(x=>x.id===id); if(!g) return;
   if(f==="target"){ const x=parseFloat(v); g.target=isNaN(x)||x<=0?null:r2(x); } else if(f==="onHand") g.onHand=!!v; else g[f]=v; save(); render(); };
+window.amGoalStatus=(id,st)=>{ const D=state.data, g=D.goals.find(x=>x.id===id); if(!g) return; if(!setGoalStatus(D,id,st)){ toast(st==="claimed"?"Set a price first":st==="active"?"Occasion wishes aren't saving goals":"Can't change a purchased wish"); render(); return; } save(); render(); };
+window.amGoalCopy=(id)=>{ const n=copyGoal(state.data,id); if(n){ save(); render(); toast(`Copied "${n.title}" to the wish list`); } };
+window.amGoalDelete=(id)=>{ if(state.confirmDel!=="goal:"+id){ state.confirmDel="goal:"+id; render(); return; } deleteGoal(state.data,id); state.confirmDel=null; save(); render(); toast("Deleted"); };
 window.amGoalAct=(id,st)=>{ const D=state.data, g=D.goals.find(x=>x.id===id); if(!g) return;
   if(st==="active"){ if(!activateGoal(D,id)){ toast("Occasion wishes aren't saving goals"); return; } }
   else if(st==="dropped") dropGoal(D,id);
@@ -3071,24 +3101,29 @@ function renderAdultMoney(){
       <table class="ledger"><tr><th>Date</th><th>Jar</th><th>Type</th><th class="num">Amount</th><th>Note</th><th>Origin</th></tr>
       ${rows.map(r=>`<tr class="${r.origin==="system"?"sys":""}"><td>${md(r.date)}</td><td>${r.acct}</td><td>${r.type}</td><td class="num">${fmtMoneyC(r.amt)}</td><td>${r.note||(r.type==="interest"?`${Math.round(r.rate*100)}% of ${fmtMoneyC(r.base)}`:"")}</td><td><span class="badge">${r.origin}</span></td></tr>`).join("")}</table>
       ${rows.length?"":`<div class="empty">No lines yet.</div>`}`; }
-  if(tab==="goals"){ const kid=state.am.kid, gs=goalsFor(D,kid).filter(g=>g.currency==="money").sort((a,b)=>({active:0,achieved:1,wishlist:2,dropped:3}[a.status]-{active:0,achieved:1,wishlist:2,dropped:3}[b.status])||(a.occasion||"").localeCompare(b.occasion||"")||(a.rank??0)-(b.rank??0));
-    const unbought=achievedUnbought(D,kid).map(g=>g.id), afford=affordableActive(D,kid); if(afford) unbought.push(afford.id); // an active goal with enough saved can be bought whenever you decide
+  if(tab==="goals"){ const kid=state.am.kid, ORD={claimed:0,active:1,wishlist:2,dropped:3}, all=goalsFor(D,kid).filter(g=>g.currency==="money");
+    const gs=all.filter(g=>g.status!=="purchased").sort((a,b)=>(ORD[a.status]??9)-(ORD[b.status]??9)||(a.occasion||"").localeCompare(b.occasion||"")||(a.rank??0)-(b.rank??0));
+    const bought=all.filter(g=>g.status==="purchased").sort((a,b)=>(b.purchasedAt||"").localeCompare(a.purchasedAt||""));
+    const canLog=g=>g.status==="claimed"||(g.status==="active"&&g.target!=null&&kidBalances(D,kid).save>=g.target); // log the real purchase: claimed, or active with enough saved
+    const STATUS=[["wishlist","Wish list"],["active","Saving for it"],["claimed","Getting it"],["dropped","Dropped"]];
     body=`<div class="addline"><select onchange="amKid(this.value)">${kids.map(k=>`<option value="${k.id}" ${k.id===kid?"selected":""}>${k.name}</option>`).join("")}</select>
       <input type="text" id="am-gtitle" placeholder="New wish (adult-added)" style="flex:1;min-width:140px"><input type="text" id="am-gprice" inputmode="decimal" placeholder="price" style="width:70px"><button class="pri" onclick="amAddGoal()">Add</button></div>
       <table class="gtable"><tr><th>Item</th><th>Status</th><th>For</th><th style="width:80px">Price $</th><th>Link</th><th>Notes</th><th>On hand</th><th></th></tr>
       ${gs.map(g=>`<tr><td><div class="gitem"><div class="gpic">${goalIcon(g)}</div><div><input type="text" value="${(g.title||"").replace(/"/g,"&quot;")}" onchange="amGoalRename('${g.id}',this.value)" style="width:160px;font-weight:600" title="Rename"><div class="rmeta">added ${g.addedAt?md(g.addedAt):""}</div>
-            <div class="gpicbtns"><input type="text" value="${g.emoji||""}" placeholder="${WISH_ICON}" title="Emoji" onchange="amGoalEmoji('${g.id}',this.value)"><button onclick="setGoalImage('${g.id}')">${g.image?"Change photo":"Photo"}</button>${g.image?`<button onclick="clearGoalImage('${g.id}')">Remove photo</button>`:""}</div></div></div></td><td><span class="badge ${g.status==="active"?"ok":g.status==="dropped"?"bad":""}">${g.status}</span></td>
+            <div class="gpicbtns"><input type="text" value="${g.emoji||""}" placeholder="${WISH_ICON}" title="Emoji" onchange="amGoalEmoji('${g.id}',this.value)"><button onclick="setGoalImage('${g.id}')">${g.image?"Change photo":"Photo"}</button>${g.image?`<button onclick="clearGoalImage('${g.id}')">Remove photo</button>`:""}</div></div></div></td>
+        <td><select class="st st-${g.status}" onchange="amGoalStatus('${g.id}',this.value)">${STATUS.filter(([v])=>!(g.occasion&&(v==="active"||v==="claimed"))).map(([v,l])=>`<option value="${v}" ${g.status===v?"selected":""}>${l}</option>`).join("")}</select>${g.status==="claimed"?`<div class="rmeta">${fmtMoneyC(g.target)} set aside since ${md(g.claimedAt||g.addedAt)}</div>`:""}</td>
         <td>${g.status==="wishlist"?`<select onchange="amGoalOccasion('${g.id}',this.value)"><option value="">Allowance</option>${occasions(D).map(o=>`<option value="${o.id}" ${g.occasion===o.id?"selected":""}>${o.icon} ${o.name}</option>`).join("")}</select>`:(g.occasion?`${occasionOf(D,g.occasion)?.icon||""} ${occasionOf(D,g.occasion)?.name||g.occasion}`:"")}</td>
         <td><input type="text" inputmode="decimal" value="${g.target??""}" onchange="amGoalField('${g.id}','target',this.value)" style="width:70px"></td>
         <td><input type="text" value="${g.url||""}" placeholder="https://" onchange="amGoalField('${g.id}','url',this.value)"></td>
         <td><input type="text" value="${g.notes||""}" placeholder="where they saw it, which one" onchange="amGoalField('${g.id}','notes',this.value)"></td>
         <td><input type="checkbox" ${g.onHand?"checked":""} onchange="amGoalField('${g.id}','onHand',this.checked)"></td>
-        <td class="btns">${g.status==="wishlist"?`<button onclick="amGoalAct('${g.id}','active')">Make active</button><button class="bad" onclick="amGoalAct('${g.id}','dropped')">Drop</button>`:""}
-          ${g.status==="active"?`<button onclick="amGoalAct('${g.id}','wishlist')">Back to list</button>`:""}
-          ${g.status==="dropped"?`<button onclick="amGoalAct('${g.id}','wishlist')">Restore</button>`:""}
-          ${unbought.includes(g.id)?`<input type="text" id="am-price-${g.id}" inputmode="decimal" value="${g.target}" style="width:64px" title="actual price"><button class="pri" onclick="amPurchase('${g.id}')">Record purchase</button>`:""}</td></tr>`).join("")}</table>
+        <td class="btns">${canLog(g)?`<span class="logrow">$<input type="text" id="am-price-${g.id}" inputmode="decimal" value="${g.target}" style="width:64px" title="what you actually paid"><button class="pri" onclick="amPurchase('${g.id}')">Log purchase</button></span>`:""}
+          <button onclick="amGoalCopy('${g.id}')" title="Duplicate as a new wish">Copy</button><button class="bad" onclick="amGoalDelete('${g.id}')" title="Remove from every view">${state.confirmDel==="goal:"+g.id?"Sure?":"Delete"}</button></td></tr>`).join("")}</table>
       ${gs.length?"":`<div class="empty">No wishes yet. Kids add them from their money page.</div>`}
-      <div class="note">Kids add title and picture; you own price, link, notes, and on-hand. A goal without a price shows "Mom is adding the price" and can't be reached until it has one (To Review nags you). Reaching a goal marks it achieved; recording the purchase writes the save-jar line (default the target, edit for the real price).</div>`; }
+      ${bought.length?`<details class="archive"><summary>Purchased · ${bought.length}</summary><table class="gtable"><tr><th>Item</th><th>Paid</th><th>Date</th><th>Notes</th><th></th></tr>
+        ${bought.map(g=>`<tr class="ro"><td><div class="gitem"><div class="gpic">${goalIcon(g)}</div><div>${g.title}<div class="rmeta">added ${g.addedAt?md(g.addedAt):""}${g.url?` · <a href="${g.url.match(/^https?:/)?g.url:"https://"+g.url}" target="_blank" rel="noopener">link</a>`:""}</div></div></div></td><td>${fmtMoneyC(g.paid??g.target??0)}</td><td>${g.purchasedAt?md(g.purchasedAt):""}</td><td class="rmeta">${g.notes||""}</td>
+          <td class="btns"><button onclick="amGoalCopy('${g.id}')">Copy</button><button class="bad" onclick="amGoalDelete('${g.id}')">${state.confirmDel==="goal:"+g.id?"Sure?":"Delete"}</button></td></tr>`).join("")}</table></details>`:""}
+      <div class="note">Status is yours to change until you log the purchase; after that the row is a read-only archive entry (the save-jar line is written with what you paid). "Getting it" means the kid claimed it: the price is set aside on their side but stays in the ledger until you log it. Copy makes a fresh wish-list row; Delete removes the row from every view (a logged purchase stays in the ledger).</div>`; }
   if(tab==="rewards") body=renderAdultRewards(kids);
   return `<div class="sect" style="margin-top:14px"><h3>Money & rewards</h3><div class="card money-adult">${tabs}${body}</div></div>`;
 }
