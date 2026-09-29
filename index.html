@@ -34,6 +34,65 @@ main{max-width:1080px;margin:0 auto;padding:16px}
 
 /* ---------- kid view ---------- */
 .kidgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* one-kid dashboard */
+body.dashmode{background:#fff} /* v0.42.1: white page; the hue tint sits behind the rail only (a tinted page muddied the daypart list) */
+.dash .rail{background:var(--k-jar);border-radius:var(--r);padding:12px}
+.dash .dcard.cur::before{background:var(--k-main)} /* dashboard: the current block's bar is the kid's bright hue, not ink */
+body.dashmode .topbar .toggle{display:none}
+.dash .dashgrid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
+.dash .left,.dash .rail{display:flex;flex-direction:column;gap:12px;min-width:0}
+.dash .rail .wxcard{border-color:var(--k-soft)}
+.dash .switch{display:flex;gap:6px;align-items:center;margin-right:6px}
+.dash .switch a{color:#fff;opacity:.8;font-size:.85rem;text-decoration:none;border:1.5px solid rgba(255,255,255,.6);border-radius:999px;padding:3px 10px}
+.dash .switch a:hover{opacity:1}
+.dash .dtile{background:#fff;border-radius:var(--r);border:1px solid var(--k-soft);padding:12px 14px;display:flex;flex-direction:column;gap:10px;color:var(--k-ink)}
+.dash .dtile[role=button],.dash .dtile .th[role=button],.dash .dtile .tgoal[role=button],.dash .dtile .tkind[role=button]{cursor:pointer}
+.dash .dtile .th{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:"Fredoka";font-size:1.15rem;font-weight:600}
+.dash .dtile .th .chev{color:var(--k-muted);font-size:1.4rem;font-weight:400}
+.dash .dtile .th .thr{display:flex;align-items:center;gap:8px}
+.kidcol.dash{min-width:900px} /* header and grid stay as wide as the content; narrow screens scroll sideways */
+.dash .trow{flex-direction:column;gap:6px} .dash .trow .tbtn{width:100%;padding:10px 14px;font-size:1rem}
+.dash .dtile .th b{font-size:1.5rem;font-weight:700;color:var(--k-main);display:inline-block}
+.dash .dtile .th b small{font-size:.8rem;color:#8a6414;background:var(--star-soft);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+.dash .dtile .th b.pop{animation:pop .5s ease}
+.dash .tbtn{background:var(--k-accent);color:var(--k-ink);border-radius:999px;padding:8px 14px;font-family:"Fredoka";font-weight:700;font-size:.95rem;white-space:nowrap}
+.dash .tbtn.go{background:var(--money);color:#fff}
+.dash .tgoal{display:flex;align-items:center;gap:12px;background:var(--k-soft);border-radius:16px;padding:10px}
+.dash .tgoal .pic{width:84px;height:84px;border-radius:14px;background:#fff;display:grid;place-items:center;font-size:2.4rem;overflow:hidden;flex:none}
+.dash .tgoal.small .pic{width:56px;height:56px;font-size:1.8rem}
+.dash .tgoal .pic img{width:100%;height:100%;object-fit:cover}
+.dash .tgoal .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dash .tgoal .info small{font-size:.8rem;color:var(--k-muted);text-transform:uppercase;letter-spacing:.04em}
+.dash .tgoal .info b{font-size:1.1rem;line-height:1.2}
+.dash .tgoal .info span{font-size:.9rem;color:var(--k-muted)}
+.dash .tgoal .bar{height:14px;background:#fff;border-radius:999px;overflow:hidden;margin-top:4px}
+.dash .tgoal .bar div{height:100%;background:var(--k-main);border-radius:999px;transition:width .8s ease}
+.dash .tgoal.none .pic{background:transparent;border:3px dashed var(--k-lock);color:var(--k-main)}
+.dash .tlist{display:flex;flex-direction:column;gap:6px}
+.dash .tw{display:flex;align-items:center;gap:10px}
+.dash .tw .n{width:22px;text-align:center;font-family:"Fredoka";font-weight:700;color:var(--k-main);font-size:1.1rem}
+.dash .tw .pic{width:40px;height:40px;border-radius:10px;background:var(--k-jar);display:grid;place-items:center;font-size:1.4rem;overflow:hidden;flex:none}
+.dash .tw .pic img{width:100%;height:100%;object-fit:cover}
+.dash .tw .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.dash .tmore,.dash .tempty,.dash .tfoot{font-size:.85rem;color:var(--k-muted)}
+.dash .tfoot{border-top:1px solid var(--k-soft);padding-top:8px}
+.dash .tjars{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.dash .tj{background:var(--k-jar);border-radius:14px;border-top:8px solid var(--k-main);padding:8px 6px;text-align:center}
+.dash .tj.j-spend{border-top-color:var(--k-spend)} .dash .tj.j-save{border-top-color:var(--k-save)} .dash .tj.j-share{border-top-color:var(--k-share)}
+.dash .tj b{display:block;font-size:1.15rem;color:var(--k-main);font-variant-numeric:tabular-nums}
+.dash .tj span{font-size:.8rem;color:var(--k-muted)}
+.dash .tcta{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--money-soft);border:2px solid var(--money);border-radius:14px;padding:8px 10px;font-family:"Fredoka";font-size:1rem}
+.dash .trow{display:flex;justify-content:flex-end}
+.dash .tkind{display:flex;align-items:center;gap:12px;border-top:1px solid var(--k-soft);padding-top:10px}
+.dash .tkind .kstar .wedge{stroke:#fff}
+.dash .tkind .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dash .tkind .info b{font-family:"Fredoka";font-size:1.05rem}
+.dash .tkind .info b span{color:var(--k-main)} .dash .tkind .info b small{color:var(--k-muted);font-size:.8rem}
+.dash .tkind .info>span{font-size:.85rem;color:var(--k-muted)}
+.dash .tkind .chev{color:var(--k-muted);font-size:1.4rem;font-weight:400}
+.dash .kindbanner.small{padding:8px 12px;font-size:.95rem}
+body.dashmode{overflow-x:auto} /* narrow screens keep the two columns and scroll sideways (by request: the tiles got lost at the bottom) */
+.dash .dashgrid{min-width:900px}
 @media(max-width:720px){.kidgrid{grid-template-columns:1fr}}
 .kidcol{display:flex;flex-direction:column;gap:12px}
 /* theme layer: one hue per kid (people.hue), every kid-screen color derived by lightness in oklch */
@@ -407,6 +466,30 @@ a.chip{color:var(--adult)}
 .mp .rrowk2 .pic img{width:100%;height:100%;object-fit:cover}
 .mp .rrowk2 .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .mp .rrowk2 .txt b{font-size:1.15rem;font-weight:700;line-height:1.2}
+.mp .rrowk2 .titlebtn{background:transparent;padding:0;text-align:left;font:inherit;color:inherit;font-weight:700;font-size:1.15rem;line-height:1.2;display:inline}
+.mp .rrowk2 .titlebtn small{font-size:.8rem;opacity:.5}
+.mp .rrowk2 .edit{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.mp .rrowk2 .edit input{flex:1;min-width:140px;font-family:inherit;font-size:1.05rem;border:2px solid var(--k-main);border-radius:10px;padding:6px 8px}
+.mp .rrowk2 .edit .cancel{background:#fff;border-radius:999px;width:32px;height:32px}
+.mp .rrowk2.saving{background:var(--k-accent);box-shadow:0 0 0 3px var(--k-main) inset}
+/* ideas: steps fold out under the row */
+.mp .rrowk2.open{flex-wrap:wrap}
+.mp .rrowk2 .stepsbtn.on{background:#fff}
+.mp .rrowk2 .steps{flex-basis:100%;display:flex;flex-direction:column;gap:6px;background:#fff;border-radius:14px;padding:10px 12px;margin-top:4px}
+.mp .rrowk2 .step{display:flex;align-items:center;gap:10px;font-size:1.05rem}
+.mp .rrowk2 .step.done span{text-decoration:line-through;color:var(--k-muted)}
+.mp .rrowk2 .step .chkbox{width:32px;height:32px;border-radius:9px;border:3px solid var(--k-main);background:#fff;color:var(--k-ink);font-weight:700;flex:none}
+.mp .rrowk2 .step.done .chkbox{background:var(--k-main);color:#fff}
+.mp .rrowk2 .step span{flex:1;min-width:0}
+.mp .rrowk2 .step .x{background:transparent;color:var(--k-muted);width:28px;height:28px;border-radius:999px}
+.mp .rrowk2 .stepadd{display:flex;gap:10px;align-items:center;margin-top:2px}
+.mp .rrowk2 .stepadd .chkbox{width:32px;height:32px;border-radius:9px;border:3px solid var(--k-lock);background:#fff;flex:none}
+.mp .rrowk2 .stepadd input{flex:1;min-width:120px;font-family:inherit;font-size:1rem;border:2px solid var(--k-lock);border-radius:10px;padding:7px 9px}
+.mp .rrowk2 .didit{display:flex;justify-content:flex-end;margin-top:4px}
+.mp .rrowk2 .didit .go{font-size:1rem;padding:8px 16px}
+.mp .rrowk2.donerow{background:#fff;border:2px solid var(--k-soft)}
+.mp .rrowk2.donerow .pic{background:var(--k-jar)}
+.mp .rrowk2 .savingtag{background:#fff;color:var(--k-ink);border-radius:999px;padding:8px 14px;font-weight:700;font-size:.95rem;white-space:nowrap}
 .mp .rrowk2 .txt span{font-size:.9rem;color:var(--k-muted);font-weight:500}
 .mp .rrowk2 .savebtn{background:var(--k-accent);color:var(--k-ink);border-radius:999px;padding:8px 14px;font-weight:700;font-size:.95rem;white-space:nowrap}
 .mp .rrowk2 .savebtn:disabled{opacity:.4}
@@ -919,6 +1002,18 @@ function earnedStars(data,kidId){ let n=0; for(const i of data.instances){ if(st
 /* ---- kindness star points (schema v1.10): kid-to-kid recognition, five points derive one star. Append-only; derived, never converted ---- */
 const KIND_PRESETS=["shared with me","helped me","was gentle","said something nice","let me go first","included me","played nicely with me"];
 function ensureKindness(data){ data.kindness=data.kindness||[]; }
+/* ---- ideas (schema v1.12, board v0.42): a kid's project ideas with light steps, so an idea has a place the moment it lands and doesn't have to happen today ---- */
+const IDEA_ICON="💡";
+function ensureIdeas(data){ data.ideas=data.ideas||[]; }
+function ideasFor(data,kidId,status){ ensureIdeas(data); return data.ideas.filter(i=>i.kid===kidId&&(status?i.status===status:true)).sort((a,b)=>(a.rank??99)-(b.rank??99)); }
+function openIdeas(data,kidId){ return ideasFor(data,kidId,"open"); }
+function addIdea(data,kidId,title,emoji){ ensureIdeas(data); const i={id:(data.seq++,uid("i")),kid:kidId,title,emoji:emoji||IDEA_ICON,status:"open",rank:openIdeas(data,kidId).length,addedAt:todayKey(new Date()),steps:[],notes:""}; data.ideas.push(i); return i; }
+function renumberIdeas(data,kidId){ openIdeas(data,kidId).forEach((i,n)=>i.rank=n); }
+function moveIdea(data,id,dir){ const i=data.ideas.find(x=>x.id===id); const list=openIdeas(data,i.kid), a=list.indexOf(i), b=a+dir; if(b<0||b>=list.length) return; list[a].rank=b; list[b].rank=a; }
+function ideaStatus(data,id,st){ const i=data.ideas.find(x=>x.id===id); if(!i) return; i.status=st; if(st==="done") i.doneAt=todayKey(new Date()); else delete i.doneAt; if(st==="open") i.rank=99; renumberIdeas(data,i.kid); }
+function addStep(data,id,text){ const i=data.ideas.find(x=>x.id===id); text=(text||"").trim(); if(!i||!text) return null; const st={id:uid("s"),text,done:false}; i.steps=i.steps||[]; i.steps.push(st); return st; }
+function ideaIcon(i){ return i.image?`<img src="${i.image}" alt="">`:(i.emoji||IDEA_ICON); }
+function stepsLine(i){ const n=(i.steps||[]).length, d=(i.steps||[]).filter(s=>s.done).length; return n?`${d} of ${n} steps done`:"No steps yet"; }
 function givePoint(data,giverId,receiverId,reason,preset,method){ ensureKindness(data);
   const p={id:uid("k"),giver:giverId,receiver:receiverId,reason:(reason||"").trim(),preset:preset||null,method:method||"typed",status:"given",seen:false,at:new Date().toISOString(),date:todayKey(new Date())};
   data.kindness.push(p); return p; }
@@ -1317,7 +1412,7 @@ function migrate(data){
   delete S.kidDailyClaimCap;
   for(const i of data.instances) if(!i.id) i.id=uid("i");
   for(const r of data.routines) if(!r.id) r.id=uid("r_");
-  ensureMoney(data); ensureClaims(data); ensureKindness(data);
+  ensureMoney(data); ensureClaims(data); ensureKindness(data); ensureIdeas(data);
   seedRewards(data);
   migrateStars(data);
   data.version="1.5";
@@ -1444,7 +1539,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.40.2 · picture picker hidden behind the picture";
+const BUILD="v0.42.2 · add form keeps the name when the picker opens; first-step checkbox";
 const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
@@ -1545,13 +1640,63 @@ function render(){
   const app=$("#app");
   if(state.page && String(state.page).startsWith("money:")){ app.innerHTML=renderMoneyPage(String(state.page).slice(6)); return; }
   if(state.page && String(state.page).startsWith("rewards:")){ app.innerHTML=renderRewardsPage(String(state.page).slice(8)); return; }
+  if(state.page && String(state.page).startsWith("ideas:")){ app.innerHTML=renderIdeasPage(String(state.page).slice(6)); return; }
   if(state.page && String(state.page).startsWith("kind:")){ app.innerHTML=renderKindnessPage(String(state.page).slice(5)); afterKindnessRender(); return; }
   if(state.page && String(state.page).startsWith("task:")){ app.innerHTML=renderTaskDetail(String(state.page).slice(5)); return; }
   if(state.page && String(state.page).startsWith("tedit:")){ app.innerHTML=renderTaskEditor(String(state.page).slice(6)); return; }
   if(state.page && String(state.page).startsWith("edit:")){ app.innerHTML=renderRoutineEditor(String(state.page).slice(5)); return; }
   if(state.page){ app.innerHTML=renderRoutineDetail(state.page); return; }
+  if(state.dashKid){ const kid=state.data.people.find(p=>p.id===state.dashKid&&p.role==="child"); if(kid){ app.innerHTML=renderDashboard(kid,dk); return; } state.dashKid=null; document.body.classList.remove("dashmode"); }
   app.innerHTML = state.view==="kids" ? renderKids(dk) : state.view==="settings" ? renderSettings() : renderAdult(dk);
 }
+/* ---------- one-kid dashboard (v0.41): ?kid=<name or id>. Today on the left, a rail of tiles on the right; grown-up tabs hidden. Each kid's iPad bookmarks their own URL. ---------- */
+function dashKidFromUrl(){ const q=new URLSearchParams(location.search).get("kid"); if(!q||!state.data) return null; const v=q.trim().toLowerCase();
+  const k=state.data.people.find(p=>p.role==="child"&&(p.id.toLowerCase()===v||(p.name||"").toLowerCase()===v)); return k?k.id:null; }
+function applyDashMode(){ state.dashKid=dashKidFromUrl(); document.body.classList.toggle("dashmode",!!state.dashKid);
+  if(state.dashKid){ const k=state.data.people.find(p=>p.id===state.dashKid); document.body.style.setProperty("--hue",k.hue??350); } }
+function dashUrl(kid){ const u=new URL(location.href); if(kid) u.searchParams.set("kid",(kid.name||kid.id).toLowerCase()); else u.searchParams.delete("kid"); return u.pathname+u.search; }
+function renderDashboard(kid,dk){
+  const D=state.data, P=renderKidCol(kid,dk,{parts:true}), others=D.people.filter(p=>p.role==="child"&&p.id!==kid.id);
+  // wishes: the hero tile
+  const g=activeGoal(D,kid.id);
+  const save=P.kb.save, pct=g&&g.target!=null?Math.min(100,Math.round(save/g.target*100)):0;
+  const wishTile=`<div class="dtile wishes" role="button" onclick="openMoney('${kid.id}','wish')">
+    <div class="th"><span>❤️ My wishes</span><span class="chev">›</span></div>
+    ${g?`<div class="tgoal"><div class="pic">${goalIcon(g)}</div><div class="info"><small>Saving for</small><b>${g.title}</b><span>${g.target!=null?`${fmtMoneyC(save)} of ${fmtMoneyC(g.target)}`:`${fmtMoneyC(save)} saved · Mom is adding the price`}</span><div class="bar"><div style="width:${pct}%"></div></div></div></div>`
+      :`<div class="tgoal none"><div class="pic">?</div><div class="info"><b>No goal yet</b><span>Tap a wish and "Save for this"</span></div></div>`}
+    </div>`; // just the current goal and its status; the full list is one tap away
+  // money
+  const moneyTile=`<div class="dtile money" role="button" onclick="openMoney('${kid.id}')">
+    <div class="th"><span>💰 My money</span><span class="thr"><b class="${P.moneyPop?"pop":""}">${fmtMoney(P.kidTotal)}</b><span class="chev">›</span></span></div>
+    <div class="tjars">${["spend","save","share"].map(k=>`<div class="tj j-${k}"><b>${fmtMoney(P.kb[k])}</b><span>${k}</span></div>`).join("")}</div>
+    ${P.pendRun?`<div class="tcta"><span>🎉 Allowance day!</span><button class="tbtn go" onclick="event.stopPropagation();openMoney('${kid.id}','run')">Let's go</button></div>`
+      :P.kb.holding>0?`<div class="tcta"><span>${fmtMoney(P.kb.holding)} waiting for you to pick a jar</span><button class="tbtn" onclick="event.stopPropagation();openMoney('${kid.id}')">Put it in</button></div>`:""}</div>`;
+  // stars + star points
+  const sg=starGoal(D,kid.id), avail=P.starsNow, spct=sg?Math.min(100,Math.round(avail/sg.target*100)):0;
+  const starTile=`<div class="dtile stars">
+    <div class="th" role="button" onclick="openRewards('${kid.id}')"><span>⭐ My stars</span><span class="thr"><b class="${P.starPop?"pop":""}">${avail}${P.pendStars?`<small title="being checked">+${P.pendStars}</small>`:""}</b><span class="chev">›</span></span></div>
+    ${sg?`<div class="tgoal small" role="button" onclick="openRewards('${kid.id}')"><div class="pic">${sg.emoji||"🎁"}</div><div class="info"><small>Saving up for</small><b>${sg.title}</b><span>${avail} of ${sg.target} ★</span><div class="bar"><div style="width:${spct}%"></div></div></div></div>`:""}
+    <div class="tkind" role="button" onclick="openKindness('${kid.id}')">${starWedges(P.partial,44,P.kindPop?"pop":"")}<div class="info"><b>Star points <span>${P.partial}<small>/5</small></span></b><span>${5-P.partial} more make a star</span></div><span class="chev">›</span></div>
+    ${others.length?`<div class="trow">${others.map(o=>`<button class="tbtn" onclick="openKindnessGive('${kid.id}','${o.id}')">💛 Give ${o.name} a star point</button>`).join("")}</div>`:""}
+    ${P.unseen.length?`<div class="kindbanner small"><span>💛 ${[...new Set(P.unseen.map(x=>x.giver))].map(nameOf).join(" and ")} gave you ${P.unseen.length===1?"a star point":P.unseen.length+" star points"}!</span><button onclick="kpSeen('${kid.id}')">See it</button></div>`:""}</div>`;
+  const ideas=openIdeas(D,kid.id), top1=ideas[0];
+  const ideaTile=`<div class="dtile ideas" role="button" onclick="openIdeasPage('${kid.id}')">
+    <div class="th"><span>💡 My ideas</span><span class="thr">${ideas.length?`<b>${ideas.length}</b>`:""}<span class="chev">›</span></span></div>
+    ${top1?`<div class="tgoal small"><div class="pic">${ideaIcon(top1)}</div><div class="info"><small>Next up</small><b>${top1.title}</b><span>${stepsLine(top1)}</span>${(top1.steps||[]).length?`<div class="bar"><div style="width:${Math.round((top1.steps.filter(s=>s.done).length/top1.steps.length)*100)}%"></div></div>`:""}</div></div>`
+      :`<div class="tgoal none small"><div class="pic">?</div><div class="info"><b>No ideas yet</b><span>Something to build, make, or do</span></div></div>`}</div>`;
+  const switcher=`<span class="switch">${others.map(o=>`<a href="${dashUrl(o)}">${o.name}</a>`).join("")}<a href="${dashUrl(null)}" title="Grown-up view">Everyone</a></span>`;
+  return `<div class="kidcol dash" style="--hue:${kid.hue??350}">
+    <div class="kidhead" style="background:var(--k-main)">
+      <h2 style="display:flex;align-items:center;gap:10px">${avatarHTML(kid)}${kid.name}</h2>
+      <div class="doors">${switcher}<button class="huedoor ${P.hueOpen?"on":""}" onclick="toggleHue('${kid.id}')" aria-label="Pick my color" title="Pick my color"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
+    </div>
+    ${P.hueOpen?`<div class="huerow"><span>My color</span><span class="swatches">${HUE_PRESETS.map(h=>`<button data-hue="${h.h}" class="${kid.hue===h.h?"on":""}" title="${h.n}" style="background:oklch(0.76 0.19 ${h.h})" onclick="setHue('${kid.id}',${h.h})"></button>`).join("")}</span></div>`:""}
+    <div class="dashgrid">
+      <div class="left">${P.todayHTML}${P.extraHTML}</div>
+      <div class="rail">${weatherStripHTML()}${wishTile}${moneyTile}${starTile}${ideaTile}</div>
+    </div></div>`;
+}
+window.openWish=(kidId)=>{ openMoney(kidId,'wish'); setTimeout(()=>$("#mp-wtitle")?.focus(),60); };
 
 /* ---------- routines page ---------- */
 const DAY_NAMES=["Su","Mo","Tu","We","Th","Fr","Sa"];
@@ -1981,7 +2126,7 @@ function renderKids(dk){
   const kids=state.data.people.filter(p=>p.role==="child");
   return `<div class="kidgrid">${kids.map(k=>renderKidCol(k,dk)).join("")}</div>`;
 }
-function renderKidCol(kid,dk){
+function renderKidCol(kid,dk,opts={}){
   const D=state.data, nowDp=daypartNow();
   const todays=D.routines.filter(r=>r.people.includes(kid.id)&&r.members&&r.tracking==="interactive"&&r.days.includes(dow(state.now)));
   const info=todays.map(r=>{
@@ -2021,7 +2166,7 @@ function renderKidCol(kid,dk){
     return `<div class="card dcard ${mode} ${isNow?"cur":""}"><div class="dband"><span class="dico">${dpIcon(dp)}</span><span class="dname">${dpLabel(dp,kid)}</span><span class="drange">| ${dpRange(dp)}</span></div>${strip}${rows}${clear}</div>`;
   }).join("");
   const allMustDone=info.every(x=>x.done)&&must.every(jobDone);
-  const todayHTML=`${weatherStripHTML()}${cards}
+  const todayHTML=`${state.dashKid?"":weatherStripHTML()}${cards}
     ${allMustDone&&(info.length||must.length)?`<div class="allnow card">🎉 Everything done today!</div>`:""}`;
   // --- EXTRA STARS card: open, optional chores as an offer; grouped by state, empty groups hidden ---
   const grabs=extra.filter(x=>!["done","verified","missed","skipped"].includes(x.i.state)).map(x=>renderTile(x.i,kid)).join("")
@@ -2041,6 +2186,7 @@ function renderKidCol(kid,dk){
   const givers=[...new Set(unseen.map(p=>p.giver))].map(nameOf).join(" and ");
   const kindBanner=unseen.length?`<div class="kindbanner"><span>💛 ${givers} gave you ${unseen.length===1?"a star point":unseen.length+" star points"}!</span><button onclick="kpSeen('${kid.id}')">See it</button></div>`:"";
   const hueOpen=state.hueOpen===kid.id;
+  if(opts.parts) return {todayHTML,extraHTML,kb,kidTotal,pendRun,starsNow,pendStars,partial,unseen,starPop,moneyPop,kindPop,kindBanner,hueOpen};
   return `<div class="kidcol" style="--hue:${kid.hue??350}">
     <div class="kidhead" style="background:var(--k-main)">
       <h2 style="display:flex;align-items:center;gap:10px">${avatarHTML(kid)}${kid.name}</h2>
@@ -2048,6 +2194,7 @@ function renderKidCol(kid,dk){
         <button class="jar kinddoor" onclick="openKindness('${kid.id}')" aria-label="Star points: ${partial} of 5${unseen.length?`, ${unseen.length} new`:""}" title="Kindness star points">${starWedges(partial,26,kindPop?"pop":"")}<span class="${kindPop?"pop":""}">${partial}<small>/5</small></span></button>
         <button class="moneydoor" onclick="openMoney('${kid.id}')" aria-label="My money${kb.holding>0?`, ${fmtMoney(kb.holding)} waiting for you`:""}">💰 <span class="${moneyPop?"pop":""}">${fmtMoney(kidTotal)}</span>${kb.holding>0?`<span class="pendchip money" title="waiting for you to pick a jar">+${fmtMoney(kb.holding)}</span>`:""}</button>
         <button class="moneydoor wishdoor" onclick="openMoney('${kid.id}','wish')" aria-label="My wish list" title="My wish list">❤️</button>
+        <button class="moneydoor wishdoor" onclick="openIdeasPage('${kid.id}')" aria-label="My ideas" title="My ideas">💡</button>
         <button class="huedoor ${hueOpen?"on":""}" onclick="toggleHue('${kid.id}')" aria-label="Pick my color" title="Pick my color"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
     </div>
     ${hueOpen?`<div class="huerow"><span>My color</span><span class="swatches">${HUE_PRESETS.map(h=>`<button data-hue="${h.h}" class="${kid.hue===h.h?"on":""}" title="${h.n}" style="background:oklch(0.76 0.19 ${h.h})" onclick="setHue('${kid.id}',${h.h})"></button>`).join("")}</span></div>`:""}
@@ -2165,6 +2312,7 @@ function renderAdult(dk){
     <div style="margin-top:14px">${renderPlanner()}</div>
     ${renderAdultMoney()}
     ${renderAdultKindness()}
+    ${renderAdultIdeas()}
     <div style="margin-top:14px">
       <div class="sect"><h3>This week's minutes</h3>
         <div class="card"><table class="ledger"><tr><th>Person</th><th>Household min</th></tr>
@@ -2194,6 +2342,7 @@ function renderGeneralSettings(){ const D=state.data;
           <div class="row" style="border-bottom:none"><span style="font-weight:700">Dayparts</span><span class="rmeta">four blocks of the waking day</span></div>
           ${dayparts().map((d,i)=>`<div class="row"><span><input type="text" value="${d.icon}" onchange="setDaypart(${i},'icon',this.value)" style="width:40px"> <input type="text" value="${d.label}" onchange="setDaypart(${i},'label',this.value)" style="width:110px"></span>
             <span class="rmeta">starts <input type="time" value="${d.start}" onchange="setDaypart(${i},'start',this.value)"></span></div>`).join("")}
+          <div class="row"><span>Kid dashboards</span><span class="rmeta" style="display:flex;gap:10px;flex-wrap:wrap">${D.people.filter(p=>p.role==="child").map(k=>`<a class="chip" href="${dashUrl(k)}">${k.name}'s dashboard</a>`).join("")}<span>Open one on a kid's iPad and add it to the home screen; that URL shows only their screen.</span></span></div>
           <div class="row" style="border-bottom:none"><span style="font-weight:700">Weather</span><span class="rmeta">${state.wx?`forecast loaded ${new Date(state.wx.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}`:"no forecast right now"}</span></div>
           <div class="row"><span>Place</span><span><input type="text" id="wx-place" value="${D.settings.weather.place||""}" placeholder="City or zip" style="width:170px"> <button class="newbtn" onclick="findWeatherPlace()">Find</button> <span class="rmeta">${D.settings.weather.lat!=null?`${(+D.settings.weather.lat).toFixed(3)}, ${(+D.settings.weather.lon).toFixed(3)}`:"not set"}</span></span></div>
           <div class="row"><span>Getting-dressed rules</span><span class="rmeta" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
@@ -2533,7 +2682,8 @@ window.addPerson=()=>{ const D=state.data, name=$("#np_name").value.trim(); if(!
   }
   D.people.push(person);
   save(); render(); toast(`${name} added`); };
-window.setHue=(pid,h)=>{ state.data.people.find(p=>p.id===pid).hue=+h; save(); render(); };
+window.setHue=(pid,h)=>{ setHueInner(pid,h); if(state.dashKid===pid) document.body.style.setProperty("--hue",h); };
+const setHueInner=(pid,h)=>{ state.data.people.find(p=>p.id===pid).hue=+h; save(); render(); };
 window.toggleHue=(pid)=>{ state.hueOpen=state.hueOpen===pid?null:pid; render(); };
 function avatarHTML(p,cls){ return p.avatar?`<span class="avatar ${cls||""}"><img src="${p.avatar}" alt=""></span>`:`<span class="avatar ${cls||""}">${(p.name||"?")[0].toUpperCase()}</span>`; }
 window.setAvatar=(pid)=>{ // photo circle for the kid pages; downscaled to 160px so it stays small in storage
@@ -2557,7 +2707,7 @@ window.removePerson=(pid)=>{ if(state.confirmDel!=="person:"+pid){ state.confirm
   D.people=D.people.filter(p=>p.id!==pid);
   D.instances=D.instances.filter(i=>i.pid!==pid);
   D.redemptions=(D.redemptions||[]).filter(r=>r.kid!==pid); D.starLedger=(D.starLedger||[]).filter(r=>r.kid!==pid);
-  D.kindness=(D.kindness||[]).filter(p=>p.giver!==pid&&p.receiver!==pid);
+  D.kindness=(D.kindness||[]).filter(p=>p.giver!==pid&&p.receiver!==pid); D.ideas=(D.ideas||[]).filter(i=>i.kid!==pid);
   for(const c of D.registry){ if(c.assignees) c.assignees=c.assignees.filter(x=>x!==pid);
     if(c.accountable===pid) c.accountable="a1"; }
   for(const r of D.routines){ r.people=r.people.filter(x=>x!==pid);
@@ -2610,15 +2760,21 @@ window.mpDragStart=(ev)=>{ // drag $1 from the waiting jar onto Spend or Save; d
 window.mpMove=(from,to)=>{ const b=mpBal(); if(b[from]<1) return; state.mp.moves.push({from,to,amt:1}); state.mp.bump=to; render(); };
 window.mpPick=(goalId)=>{ if(goalId){ if(!activateGoal(state.data,goalId)){ toast("That one isn't a saving goal"); return; } } state.mp.step=6; state.mp.mode="rest"; save(); render(); };
 window.mpAddWish=()=>{ const t=$("#mp-wtitle").value.trim(); if(!t){ toast("What is it called?"); return; }
-  const g=addWish(state.data,state.mp.kid,t,state.mp.emoji||WISH_ICON); if(state.mp.photo) g.image=state.mp.photo; state.mp.emoji=null; state.mp.photo=null; state.mp.pickOpen=false; save(); render(); toast("Added to your wish list"); };
-window.mpEmoji=(e)=>{ state.mp.emoji=e; state.mp.photo=null; state.mp.pickOpen=false; render(); };
-window.mpPickToggle=()=>{ state.mp.pickOpen=!state.mp.pickOpen; render(); if(state.mp.pickOpen) $("#mp-wtitle")?.blur(); }; // the picture is the door to the icon and photo choices (v0.40.2: too busy always open)
+  const g=addWish(state.data,state.mp.kid,t,state.mp.emoji||WISH_ICON); if(state.mp.photo) g.image=state.mp.photo; state.mp.emoji=null; state.mp.photo=null; state.mp.pickOpen=false; state.mp.title=""; save(); render(); toast("Added to your wish list"); };
+/* picture picker shared by the wish list (scope "mp") and the ideas list (scope "ip"): the picture is the door to the icon and photo choices */
+function pickerHTML(scope,icon,placeholder,addFn){ const S=state[scope];
+  return `<div class="newwish"><button id="${scope}-wprev" class="wprev ${S.pickOpen?"open":""}" onclick="pkToggle('${scope}')" title="Change the picture" aria-label="Change the picture">${S.photo?`<img src="${S.photo}" alt="">`:(S.emoji||icon)}</button><input id="${scope}-wtitle" placeholder="${placeholder}" maxlength="40" value="${(S.title||"").replace(/"/g,"&quot;")}" oninput="state['${scope}'].title=this.value" onkeydown="if(event.key==='Enter')${addFn}()"><button class="go" style="font-size:1.05rem;padding:10px 22px" onclick="${addFn}()">Add</button></div>
+    ${S.pickOpen?`<div class="emojis"><button class="photobtn" onclick="pkPhoto('${scope}')">📷 ${S.photo?"Change photo":"Photo"}</button>${S.photo?`<button class="photobtn" onclick="pkPhotoClear('${scope}')">✕ No photo</button>`:""}${EMOJIS.map(e=>`<button class="${S.emoji===e&&!S.photo?"on":""}" onclick="pkEmoji('${scope}','${e}')">${e}</button>`).join("")}<input class="anyemoji" id="${scope}-wemoji" placeholder="any" aria-label="Type any emoji" maxlength="8" value="${S.emoji&&!EMOJIS.includes(S.emoji)?S.emoji:""}" oninput="pkTyped('${scope}',this,'${icon}')"></div>`:""}`; }
+window.pkEmoji=(sc,e)=>{ const S=state[sc]; S.emoji=e; S.photo=null; S.pickOpen=false; render(); };
+window.pkToggle=(sc)=>{ const S=state[sc]; S.pickOpen=!S.pickOpen; render(); if(S.pickOpen) $("#"+sc+"-wtitle")?.blur(); };
+window.pkPhoto=(sc)=>{ pickImage(url=>{ const S=state[sc]; S.photo=url; S.pickOpen=false; render(); }); };
+window.pkPhotoClear=(sc)=>{ state[sc].photo=null; render(); };
+window.pkTyped=(sc,inp,icon)=>{ const S=state[sc]; let e=firstGrapheme(inp.value); if(e&&!/\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(e)) e=""; // letters and numbers aren't icons
+  if(inp.value!==e) inp.value=e; S.emoji=e||null; if(e){ S.photo=null; S.pickOpen=false; render(); $("#"+sc+"-wtitle")?.focus(); return; }
+  const prev=$("#"+sc+"-wprev"); if(prev) prev.textContent=e||icon; };
+window.mpEmoji=(e)=>pkEmoji("mp",e); window.mpPickToggle=()=>pkToggle("mp");
 function firstGrapheme(s){ s=(s||"").trim(); if(!s) return ""; try{ const it=new Intl.Segmenter(undefined,{granularity:"grapheme"}).segment(s)[Symbol.iterator]().next(); return it.done?"":it.value.segment; }catch(e){ return Array.from(s)[0]||""; } }
-window.mpEmojiTyped=(inp)=>{ // any emoji from the keyboard; updates in place so the title field keeps focus
-  let e=firstGrapheme(inp.value); if(e&&!/\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(e)) e=""; // letters and numbers aren't icons
-  if(inp.value!==e) inp.value=e; state.mp.emoji=e||null; if(e){ state.mp.photo=null; state.mp.pickOpen=false; render(); $("#mp-wtitle")?.focus(); return; } // a typed emoji is a choice: close the picker
-  const prev=$("#mp-wprev"); if(prev) prev.textContent=e||WISH_ICON;
-  document.querySelectorAll(".mp .emojis button").forEach(b=>b.classList.toggle("on",b.textContent===e)); };
+window.mpEmojiTyped=(inp)=>pkTyped("mp",inp,WISH_ICON);
 window.mpMoveWish=(id,dir)=>{ moveWish(state.data,id,dir); save(); render(); };
 window.mpFlag=(id,occ)=>{ setWishOccasion(state.data,id,occ); save(); render(); const o=occasionOf(state.data,occ); toast(o?`On your ${o.id==="birthday"?"birthday":o.name} list`:"Back on your wish list"); };
 window.mpDrop=(id)=>{ if(state.confirmDel!=="goal:"+id){ state.confirmDel="goal:"+id; render(); return; } dropGoal(state.data,id); state.confirmDel=null; save(); render(); };
@@ -2746,26 +2902,70 @@ function renderGotMoney(kid){
 window.mpGotMoney=()=>{ const v=parseFloat($("#mp-gotamt").value), from=$("#mp-gotfrom").value.trim(); if(!(v>0)){ toast("How much?"); return; }
   addClaim(state.data,state.mp.kid,v,from); state.mp.mode="rest"; save(); render(); toast("Sent! A grown-up will check it."); };
 function rankedRow(o){ // one row of a kid's ranked list: number · picture · title + subline · action · tags · ▲▼, then the trash can outside the card so small fingers don't hit it by accident. Shared by the wish list and, next, the ideas list.
-  return `<div class="rwrap"><div class="rrowk2 ${o.cls||""}"><div class="num">${o.n}</div><div class="pic">${o.pic}</div><div class="txt"><b>${o.title}</b>${o.sub?`<span>${o.sub}</span>`:""}${o.body||""}</div>
-    ${o.action||""}${o.tags||""}<span class="rank"><button onclick="${o.up}" ${o.first?"disabled":""} aria-label="Move up">▲</button><button onclick="${o.down}" ${o.last?"disabled":""} aria-label="Move down">▼</button></span></div>
+  return `<div class="rwrap"><div class="rrowk2 ${o.cls||""}"><div class="num">${o.n}</div><div class="pic">${o.pic}</div><div class="txt"><b>${o.title}</b>${o.sub?`<span>${o.sub}</span>`:""}</div>
+    ${o.action||""}${o.tags||""}<span class="rank"><button onclick="${o.up}" ${o.first?"disabled":""} aria-label="Move up">▲</button><button onclick="${o.down}" ${o.last?"disabled":""} aria-label="Move down">▼</button></span>${o.body||""}</div>
     <button class="trash ${o.confirm?"sure":""}" onclick="${o.drop}" title="Remove" aria-label="Remove">${o.confirm?"Sure?":"🗑"}</button></div>`; }
 function rankedListHTML(rows,empty){ return `<div class="rlist">${rows.length?rows.join(""):`<p class="empty">${empty}</p>`}</div>`; }
-function wishRows(kid,list){ const D=state.data, occs=occasions(D);
-  return list.map((w,i)=>rankedRow({n:i+1,pic:goalIcon(w),title:w.title,sub:w.occasion?"":(w.target==null?"Mom will add the price":fmtMoney(w.target)),
-    action:w.occasion?"":`<button class="savebtn" onclick="mpSaveFor('${w.id}')">Save for this</button>`,
-    tags:`<span class="tags">${occs.map(o=>`<button class="${w.occasion===o.id?"on":""}" onclick="mpFlag('${w.id}','${w.occasion===o.id?"":o.id}')" title="${w.occasion===o.id?"Back to my wish list":"Ask for this for "+o.name}" aria-label="${o.name}">${o.icon}</button>`).join("")}</span>`,
-    up:`mpMoveWish('${w.id}',-1)`,down:`mpMoveWish('${w.id}',1)`,first:i===0,last:i===list.length-1,drop:`mpDrop('${w.id}')`,confirm:state.confirmDel==="goal:"+w.id})); }
+function wishRows(kid,list){ const D=state.data, occs=occasions(D), save=balances(D,kid.id).save;
+  return list.map((w,i)=>{ const active=w.status==="active", editing=state.mp.editing===w.id;
+    const title=editing?`<span class="edit"><input id="mp-edit-${w.id}" value="${(w.title||"").replace(/"/g,"&quot;")}" maxlength="40" onkeydown="if(event.key==='Enter')mpEditSave('${w.id}')"><button class="savebtn" onclick="mpEditSave('${w.id}')">Save</button><button class="cancel" onclick="mpEditCancel()">✕</button></span>`
+      :`<button class="titlebtn" onclick="mpEdit('${w.id}')" title="Fix the name">${w.title} <small>✏️</small></button>`;
+    return rankedRow({n:i+1,pic:goalIcon(w),title,cls:active?"saving":"",
+      sub:editing?"":active?`Saving for this · ${w.target!=null?`${fmtMoneyC(save)} of ${fmtMoneyC(w.target)}`:`${fmtMoneyC(save)} saved, Mom is adding the price`}`:w.occasion?"":(w.target==null?"Mom will add the price":fmtMoney(w.target)),
+      action:active?`<span class="savingtag">Saving ✓</span>`:w.occasion?"":`<button class="savebtn" onclick="mpSaveFor('${w.id}')">Save for this</button>`,
+      tags:active?"":`<span class="tags">${occs.map(o=>`<button class="${w.occasion===o.id?"on":""}" onclick="mpFlag('${w.id}','${w.occasion===o.id?"":o.id}')" title="${w.occasion===o.id?"Back to my wish list":"Ask for this for "+o.name}" aria-label="${o.name}">${o.icon}</button>`).join("")}</span>`,
+      up:`mpMoveWish('${w.id}',-1)`,down:`mpMoveWish('${w.id}',1)`,first:i===0||active||(i===1&&list[0].status==="active"),last:i===list.length-1||active,drop:`mpDrop('${w.id}')`,confirm:state.confirmDel==="goal:"+w.id}); }); }
+window.mpEdit=(id)=>{ state.mp.editing=id; render(); setTimeout(()=>{ const i=$("#mp-edit-"+id); if(i){ i.focus(); i.select(); } },50); };
+window.mpEditCancel=()=>{ state.mp.editing=null; render(); };
+window.mpEditSave=(id)=>{ const g=state.data.goals.find(x=>x.id===id), v=($("#mp-edit-"+id)?.value||"").trim(); if(g&&v) g.title=v; state.mp.editing=null; save(); render(); };
 function occasionHead(kid,o){ const dk=occasionDate(state.data,o.id,kid.id); const n=dk?daysBetween(todayKey(state.now),dk):null;
   return `<h2 class="sechead">${o.icon} ${o.id==="birthday"?"For my birthday":"For "+o.name}${n!=null?`<small>${n===0?"today!":n===1?"tomorrow!":`${md(dk)} · ${n} days`}</small>`:""}</h2>`; }
 function renderWishPage(kid){
   const D=state.data, g=activeGoal(D,kid.id), mp=state.mp;
   // v0.39: the add form comes first (a kid opening this page usually has a specific thing in mind), the shelf of wishes below it
-  return `<div class="head"><h1>My wish list</h1>${g?`<p>Saving for: ${g.emoji||""} ${g.title}</p>`:`<p>Add anything you'd like to save for.</p>`}</div>
-    <div class="newwish"><button id="mp-wprev" class="wprev ${mp.pickOpen?"open":""}" onclick="mpPickToggle()" title="Change the picture" aria-label="Change the picture">${mp.photo?`<img src="${mp.photo}" alt="">`:(mp.emoji||WISH_ICON)}</button><input id="mp-wtitle" placeholder="What is it?" maxlength="40"><button class="go" style="font-size:1.05rem;padding:10px 22px" onclick="mpAddWish()">Add</button></div>
-    ${mp.pickOpen?`<div class="emojis"><button class="photobtn" onclick="mpWishPhoto()">📷 ${mp.photo?"Change photo":"Photo"}</button>${mp.photo?`<button class="photobtn" onclick="mpWishPhotoClear()">✕ No photo</button>`:""}${EMOJIS.map(e=>`<button class="${mp.emoji===e&&!mp.photo?"on":""}" onclick="mpEmoji('${e}')">${e}</button>`).join("")}<input class="anyemoji" id="mp-wemoji" placeholder="any" aria-label="Type any emoji" maxlength="8" value="${mp.emoji&&!EMOJIS.includes(mp.emoji)?mp.emoji:""}" oninput="mpEmojiTyped(this)"></div>`:""}
-    ${rankedListHTML(wishRows(kid,allowanceWishes(D,kid.id)),"Nothing yet. Add something you'd like to save for.")}
+  return `<div class="head"><h1>My wish list</h1><p>Add anything you'd like to save for.</p></div>
+    ${pickerHTML("mp",WISH_ICON,"What is it?","mpAddWish")}
+    ${rankedListHTML(wishRows(kid,[...(g?[g]:[]),...allowanceWishes(D,kid.id)]),"Nothing yet. Add something you'd like to save for.")}
     ${occasions(D).map(o=>{ const sec=wishSection(D,kid.id,o.id); return sec.length?`${occasionHead(kid,o)}${rankedListHTML(wishRows(kid,sec),"")}`:""; }).join("")}
     <div class="actions"><button class="notnow" onclick="closePage()">← My board</button><button class="notnow" onclick="mpMode('rest')">💰 My money</button></div>`;
+}
+/* ---- ideas page: same shape as the wish list (add form on top, ranked rows below), steps fold out under a row ---- */
+window.openIdeasPage=(kidId)=>{ if(!state.ip||state.ip.kid!==kidId) state.ip={kid:kidId,emoji:null,photo:null,pickOpen:false,editing:null,open:{}}; state.page="ideas:"+kidId; render(); };
+window.ipAdd=()=>{ const t=$("#ip-wtitle").value.trim(); if(!t){ toast("What's the idea?"); return; } const i=addIdea(state.data,state.ip.kid,t,state.ip.emoji||IDEA_ICON); if(state.ip.photo) i.image=state.ip.photo; state.ip.emoji=null; state.ip.photo=null; state.ip.pickOpen=false; state.ip.title=""; state.ip.open[i.id]=true; save(); render(); toast("Idea saved!"); };
+window.ipToggle=(id)=>{ state.ip.open[id]=!state.ip.open[id]; render(); if(state.ip.open[id]) setTimeout(()=>$("#ip-step-"+id)?.focus(),60); };
+window.ipMove=(id,dir)=>{ moveIdea(state.data,id,dir); save(); render(); };
+window.ipDrop=(id)=>{ if(state.confirmDel!=="idea:"+id){ state.confirmDel="idea:"+id; render(); return; } ideaStatus(state.data,id,"dropped"); state.confirmDel=null; save(); render(); };
+window.ipDone=(id)=>{ ideaStatus(state.data,id,"done"); save(); render(); toast("🎉 You did it!"); };
+window.ipReopen=(id)=>{ ideaStatus(state.data,id,"open"); save(); render(); };
+window.ipStepAdd=(id)=>{ const inp=$("#ip-step-"+id); if(!inp) return; const st=addStep(state.data,id,inp.value); if(!st){ toast("Type a step first"); return; } save(); render(); setTimeout(()=>$("#ip-step-"+id)?.focus(),60); };
+window.ipStepToggle=(id,sid)=>{ const i=state.data.ideas.find(x=>x.id===id); const st=(i?.steps||[]).find(x=>x.id===sid); if(!st) return; st.done=!st.done; save(); render(); };
+window.ipStepDrop=(id,sid)=>{ const i=state.data.ideas.find(x=>x.id===id); if(!i) return; i.steps=(i.steps||[]).filter(x=>x.id!==sid); save(); render(); };
+window.ipEdit=(id)=>{ state.ip.editing=id; render(); setTimeout(()=>{ const e=$("#ip-edit-"+id); if(e){ e.focus(); e.select(); } },50); };
+window.ipEditCancel=()=>{ state.ip.editing=null; render(); };
+window.ipEditSave=(id)=>{ const i=state.data.ideas.find(x=>x.id===id), v=($("#ip-edit-"+id)?.value||"").trim(); if(i&&v) i.title=v; state.ip.editing=null; save(); render(); };
+function ideaRows(kid,list){ const ip=state.ip;
+  return list.map((i,n)=>{ const editing=ip.editing===i.id, open=!!ip.open[i.id], steps=i.steps||[];
+    const title=editing?`<span class="edit"><input id="ip-edit-${i.id}" value="${(i.title||"").replace(/"/g,"&quot;")}" maxlength="40" onkeydown="if(event.key==='Enter')ipEditSave('${i.id}')"><button class="savebtn" onclick="ipEditSave('${i.id}')">Save</button><button class="cancel" onclick="ipEditCancel()">✕</button></span>`
+      :`<button class="titlebtn" onclick="ipEdit('${i.id}')" title="Fix the name">${i.title} <small>✏️</small></button>`;
+    const body=open?`<div class="steps">${steps.map(st=>`<div class="step ${st.done?"done":""}"><button class="chkbox" onclick="ipStepToggle('${i.id}','${st.id}')" aria-label="${st.done?"Not done":"Done"}">${st.done?"✓":""}</button><span>${st.text}</span><button class="x" onclick="ipStepDrop('${i.id}','${st.id}')" aria-label="Remove step">✕</button></div>`).join("")}
+        <div class="stepadd">${steps.length?"":`<span class="chkbox ghost" aria-hidden="true"></span>`}<input id="ip-step-${i.id}" placeholder="${steps.length?"Next step":"First step: what do you need?"}" maxlength="60" onkeydown="if(event.key==='Enter')ipStepAdd('${i.id}')"><button class="savebtn" onclick="ipStepAdd('${i.id}')">+ Step</button></div>
+        <div class="didit"><button class="go" onclick="ipDone('${i.id}')">🎉 We did it!</button></div></div>`:"";
+    return rankedRow({n:n+1,pic:ideaIcon(i),title,sub:editing?"":stepsLine(i),body,cls:open?"open":"",
+      action:`<button class="savebtn stepsbtn ${open?"on":""}" onclick="ipToggle('${i.id}')">${open?"Close":"Steps"}</button>`,
+      up:`ipMove('${i.id}',-1)`,down:`ipMove('${i.id}',1)`,first:n===0,last:n===list.length-1,drop:`ipDrop('${i.id}')`,confirm:state.confirmDel==="idea:"+i.id}); }); }
+function renderIdeasPage(kidId){
+  const D=state.data, kid=D.people.find(p=>p.id===kidId); if(!kid){ state.page=null; return renderKids(todayKey(state.now)); }
+  if(!state.ip||state.ip.kid!==kidId) state.ip={kid:kidId,emoji:null,photo:null,pickOpen:false,editing:null,open:{}};
+  const open=openIdeas(D,kidId), done=ideasFor(D,kidId,"done").sort((a,b)=>(b.doneAt||"").localeCompare(a.doneAt||""));
+  return `<div class="kidcol" style="--hue:${kid.hue??350}"><div class="mp ideas">
+    <div class="top"><button class="backbtn" onclick="closePage()">← Back</button><div class="who">${avatarHTML(kid)}${kid.name}</div></div>
+    <div class="mcard">
+      <div class="head"><h1>My ideas</h1><p>Things to build, make, or do. Add steps so you know what you need.</p></div>
+      ${pickerHTML("ip",IDEA_ICON,"What's the idea?","ipAdd")}
+      ${rankedListHTML(ideaRows(kid,open),"No ideas yet. What do you want to make?")}
+      ${done.length?`<h2 class="sechead">🎉 Done<small>${done.length}</small></h2><div class="rlist">${done.map(i=>`<div class="rwrap"><div class="rrowk2 donerow"><div class="pic">${ideaIcon(i)}</div><div class="txt"><b>${i.title}</b><span>Done ${i.doneAt?md(i.doneAt):""}${(i.steps||[]).length?` · ${(i.steps||[]).length} steps`:""}</span></div><button class="savebtn" onclick="ipReopen('${i.id}')">Do it again</button></div><button class="trash ${state.confirmDel==="idea:"+i.id?"sure":""}" onclick="ipDrop('${i.id}')" aria-label="Remove">${state.confirmDel==="idea:"+i.id?"Sure?":"🗑"}</button></div>`).join("")}</div>`:""}
+      <div class="actions"><button class="notnow" onclick="closePage()">← My board</button></div>
+    </div></div></div>`;
 }
 function renderStoryPage(kid){
   const mp=state.mp, all=storyEvents(state.data,kid.id).filter(e=>mp.filter==="all"||(mp.filter==="stars"?e.star:(e.jar===mp.filter||e.kind==="allowance")));
@@ -2821,6 +3021,7 @@ window.amPurchase=(id)=>{ const D=state.data, g=D.goals.find(x=>x.id===id); cons
   const row={kid:g.kid,date:todayKey(state.now),acct:"save",amt:-Math.abs(amt),type:"purchase",goalId:g.id,origin:"user"};
   if(needsRegen(D,g.kid,row)){ const ch=regenerate(D,g.kid,[row]); if(ch.length){ state.am.diff={row,changes:ch}; state.am.tab="ledger"; state.am.kid=g.kid; render(); return; } }
   recordPurchase(D,id,amt); save(); render(); toast(`Purchase recorded: ${fmtMoneyC(amt)} from save`); };
+window.amGoalRename=(id,v)=>{ const g=state.data.goals.find(x=>x.id===id); v=(v||"").trim(); if(!g||!v){ render(); return; } g.title=v; save(); render(); };
 window.amGoalOccasion=(id,v)=>{ setWishOccasion(state.data,id,v); save(); render(); };
 window.amGoalEmoji=(id,v)=>{ const g=state.data.goals.find(x=>x.id===id); if(!g) return; const e=firstGrapheme(v); if(e) g.emoji=e; save(); render(); };
 function pickImage(cb){ // file picker (camera roll or camera on the iPad); the picture is fit inside a 256px white square so it stays small in storage and in the sync
@@ -2833,8 +3034,7 @@ function pickImage(cb){ // file picker (camera roll or camera on the iPad); the 
     img.src=url; };
   inp.click(); }
 window.setGoalImage=(id)=>{ pickImage(url=>{ const g=state.data.goals.find(x=>x.id===id); if(!g) return; g.image=url; save(); render(); toast("Photo set"); }); };
-window.mpWishPhoto=()=>{ pickImage(url=>{ state.mp.photo=url; state.mp.pickOpen=false; render(); }); }; // kid side: a photo for the wish being added (v0.39)
-window.mpWishPhotoClear=()=>{ state.mp.photo=null; render(); };
+window.mpWishPhoto=()=>pkPhoto("mp"); window.mpWishPhotoClear=()=>pkPhotoClear("mp");
 window.clearGoalImage=(id)=>{ const g=state.data.goals.find(x=>x.id===id); if(!g) return; delete g.image; save(); render(); };
 function goalIcon(g){ return g.image?`<img src="${g.image}" alt="">`:(g.emoji||WISH_ICON); } // photo wins over emoji wherever a wish is pictured
 window.amAddGoal=()=>{ const t=$("#am-gtitle").value.trim(); if(!t){ toast("Name it first"); return; } const g=addWish(state.data,state.am.kid,t,WISH_ICON); const p=parseFloat($("#am-gprice").value); if(!isNaN(p)&&p>0) g.target=r2(p); save(); render(); };
@@ -2873,7 +3073,7 @@ function renderAdultMoney(){
     body=`<div class="addline"><select onchange="amKid(this.value)">${kids.map(k=>`<option value="${k.id}" ${k.id===kid?"selected":""}>${k.name}</option>`).join("")}</select>
       <input type="text" id="am-gtitle" placeholder="New wish (adult-added)" style="flex:1;min-width:140px"><input type="text" id="am-gprice" inputmode="decimal" placeholder="price" style="width:70px"><button class="pri" onclick="amAddGoal()">Add</button></div>
       <table class="gtable"><tr><th>Item</th><th>Status</th><th>For</th><th style="width:80px">Price $</th><th>Link</th><th>Notes</th><th>On hand</th><th></th></tr>
-      ${gs.map(g=>`<tr><td><div class="gitem"><div class="gpic">${goalIcon(g)}</div><div>${g.title}<div class="rmeta">added ${g.addedAt?md(g.addedAt):""}</div>
+      ${gs.map(g=>`<tr><td><div class="gitem"><div class="gpic">${goalIcon(g)}</div><div><input type="text" value="${(g.title||"").replace(/"/g,"&quot;")}" onchange="amGoalRename('${g.id}',this.value)" style="width:160px;font-weight:600" title="Rename"><div class="rmeta">added ${g.addedAt?md(g.addedAt):""}</div>
             <div class="gpicbtns"><input type="text" value="${g.emoji||""}" placeholder="${WISH_ICON}" title="Emoji" onchange="amGoalEmoji('${g.id}',this.value)"><button onclick="setGoalImage('${g.id}')">${g.image?"Change photo":"Photo"}</button>${g.image?`<button onclick="clearGoalImage('${g.id}')">Remove photo</button>`:""}</div></div></div></td><td><span class="badge ${g.status==="active"?"ok":g.status==="dropped"?"bad":""}">${g.status}</span></td>
         <td>${g.status==="wishlist"?`<select onchange="amGoalOccasion('${g.id}',this.value)"><option value="">Allowance</option>${occasions(D).map(o=>`<option value="${o.id}" ${g.occasion===o.id?"selected":""}>${o.icon} ${o.name}</option>`).join("")}</select>`:(g.occasion?`${occasionOf(D,g.occasion)?.icon||""} ${occasionOf(D,g.occasion)?.name||g.occasion}`:"")}</td>
         <td><input type="text" inputmode="decimal" value="${g.target??""}" onchange="amGoalField('${g.id}','target',this.value)" style="width:70px"></td>
@@ -2972,6 +3172,7 @@ window.kpStart=()=>{ const sibs=kpSiblings(state.kp.kid); if(!sibs.length){ toas
   if(sibs.length===1){ state.kp.to=sibs[0].id; state.kp.step="reason"; } else state.kp.step="to"; render(); };
 window.kpMe=()=>kpStart(); // kept for older bookmarks of the flow
 window.kpTo=(id)=>{ state.kp.to=id; state.kp.step="reason"; render(); };
+window.openKindnessGive=(kidId,toId)=>{ kpReset(kidId); state.kp.to=toId; state.kp.step="reason"; state.page="kind:"+kidId; render(); }; // dashboard button: straight to "why" for that sibling
 window.kpPreset=(v)=>{ kpSync(); state.kp.preset=state.kp.preset===v?null:v; render(); };
 window.kpCancel=()=>{ kpReset(state.kp.kid); render(); };
 window.kpHear=()=>{ kpSync(); const r=kpReason(); if(!r){ toast("Pick a reason first"); return; } kpSpeak(`${nameOf(state.kp.to)} ${r}`); };
@@ -3055,6 +3256,11 @@ function renderKindnessPage(kidId){
 window.akSendBackAsk=(id)=>{ state.ak=state.ak||{}; state.ak.sendback=id; render(); setTimeout(()=>$("#ak-note")?.focus(),30); };
 window.akSendBackGo=(id)=>{ const note=$("#ak-note")?.value||""; returnPoint(state.data,id,note); state.ak.sendback=null; save(); render(); toast("Sent back. The star point no longer counts."); };
 window.akShowAll=()=>{ state.ak=state.ak||{}; state.ak.all=!state.ak.all; render(); };
+function renderAdultIdeas(){ const D=state.data; ensureIdeas(D); const kids=D.people.filter(p=>p.role==="child"); const open=D.ideas.filter(i=>i.status==="open"); if(!kids.length) return "";
+  return `<div class="sect" style="margin-top:14px"><h3>Ideas</h3><div class="card kind-adult">
+    ${open.length?kids.map(k=>openIdeas(D,k.id).map((i,n)=>`<div class="krow2"><span><b>${k.name}</b> · ${i.emoji||IDEA_ICON} ${i.title} <span class="rmeta">#${n+1} · ${stepsLine(i)} · added ${md(i.addedAt)}</span>${(i.steps||[]).length?`<div class="rmeta">${i.steps.map(s=>`${s.done?"☑":"☐"} ${s.text}`).join(" · ")}</div>`:""}</span><span class="btns"><button onclick="ipDone('${i.id}')">Mark done</button></span></div>`).join("")).join("")
+      :`<div class="krow2"><span class="rmeta">No open ideas. Kids add them from the 💡 door on their board.</span></div>`}
+    <div class="note">Kids own their ideas and steps; this is the read-along view so an idea that needs a grown-up (a trip to the craft store, shelves) doesn't get lost.</div></div></div>`; }
 function renderAdultKindness(){
   const D=state.data; ensureKindness(D); const kids=D.people.filter(p=>p.role==="child"); if(!kids.length) return "";
   state.ak=state.ak||{sendback:null,all:false};
@@ -3117,8 +3323,8 @@ function renderAdultRewards(kids){
 const SUPA={ url:"https://uezrisrlatltsonafaoh.supabase.co", key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlenJpc3JsYXRsdHNvbmFmYW9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTM0NjYsImV4cCI6MjEwNDQ2OTQ2Nn0.OSN92ndpq6feSiV-uD74dAvYGNYLVHa3Vrknml7ssO4" /* anon key: public by design; RLS is the security */ };
 const CLOUD_TABLES={ people:"people", registry:"contributions", routines:"routines", instances:"instances", money:"money_transactions",
   runs:"allowance_runs", goals:"goals", rewards:"rewards", redemptions:"redemptions", starLedger:"star_ledger", moneyClaims:"money_claims",
-  kindness:"kindness_points" /* migration 002 */ };
-const TABLE_MIGRATION={ kindness_points:"002_kindness_points.sql" }; // tables added after 001: the board keeps working (locally) until the migration is run
+  kindness:"kindness_points" /* migration 002 */, ideas:"ideas" /* migration 003 */ };
+const TABLE_MIGRATION={ kindness_points:"002_kindness_points.sql", ideas:"003_ideas.sql" }; // tables added after 001: the board keeps working (locally) until the migration is run
 const STATE_KEYS=["settings","subMemory","log","version"];
 const cloud={ sb:null, fid:null, user:null, synced:{}, stateSynced:"", ready:false, pushing:false, again:false, status:"off", channel:null, missing:{} };
 function missingTable(e){ const m=String(e?.message||e||""); return e?.code==="42P01"||e?.code==="PGRST205"||/does not exist|schema cache/i.test(m); }
@@ -3247,12 +3453,13 @@ function cloudStatusLine(){
 (async function(){
   await loadData();
   migrate(state.data);
+  applyDashMode(); // ?kid=levon → that kid's dashboard, grown-up tabs hidden
   render(); // local cache first, so the board is usable immediately
   const ok=await cloudInit(); // then the family's cloud board (wins over the cache)
   if(!ok&&cloud.status==="signedout"){ $("#app").innerHTML=renderSignIn(); return; }
   generateDay(state.data, state.now);
   generateRuns(state.data, state.now);
-  save(); render();
+  applyDashMode(); save(); render();
   loadLunch().then(render); loadWeather().then(render);
   let shownDay=todayKey(state.now);
   const refreshNow=()=>{ state.now=new Date(); const dk=todayKey(state.now); if(dk===shownDay) return false;
