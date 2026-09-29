@@ -613,6 +613,7 @@ a.chip{color:var(--adult)}
 .pendchip{font-size:.7rem;background:rgba(255,255,255,.85);color:#8a6414;border-radius:999px;padding:1px 6px;margin-left:4px;font-weight:600}
 .pendchip.money{background:var(--money);color:#fff}
 .kidhead .avatar{box-shadow:0 0 0 2px rgba(255,255,255,.7)}
+.kidhead .avlink{display:inline-flex;border-radius:999px;text-decoration:none;color:inherit} .kidhead .avlink:hover .avatar{box-shadow:0 0 0 3px #fff}
 .huedoor{background:transparent;border-radius:999px;width:36px;height:36px;display:grid;place-items:center;color:#fff}
 .huedoor.on{background:rgba(255,255,255,.25)}
 .huerow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:8px 14px;font-family:"Fredoka"}
@@ -1565,7 +1566,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.43 · claim a wish, log the purchase, full adult control of wish rows";
+const BUILD="v0.43.1 · fix: cloud resync loop was undoing changes; avatar opens the dashboard";
 const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
@@ -1593,7 +1594,8 @@ async function loadData(){
   state.data = DEFAULT_DATA();
 }
 let saveTimer=null;
-function save(){ clearTimeout(saveTimer); saveTimer=setTimeout(async()=>{
+let savePending=false; // a change waiting for the debounce: a cloud pull must not replace it
+function save(){ clearTimeout(saveTimer); savePending=true; saveTimer=setTimeout(async()=>{ savePending=false;
   const json=JSON.stringify(state.data);
   if(cloud.ready) cloudPush();
   if(storageMode==="artifact"){
@@ -2216,7 +2218,7 @@ function renderKidCol(kid,dk,opts={}){
   if(opts.parts) return {todayHTML,extraHTML,kb,kidTotal,pendRun,starsNow,pendStars,partial,unseen,starPop,moneyPop,kindPop,kindBanner,hueOpen};
   return `<div class="kidcol" style="--hue:${kid.hue??350}">
     <div class="kidhead" style="background:var(--k-main)">
-      <h2 style="display:flex;align-items:center;gap:10px">${avatarHTML(kid)}${kid.name}</h2>
+      <h2 style="display:flex;align-items:center;gap:10px"><a class="avlink" href="${dashUrl(kid)}" title="${kid.name}'s dashboard" aria-label="${kid.name}'s dashboard">${avatarHTML(kid)}</a>${kid.name}</h2>
       <div class="doors"><button class="jar stardoor" onclick="openRewards('${kid.id}')" aria-label="${starsNow} stars${pendStars?`, ${pendStars} being checked`:""}">⭐ <span class="${starPop?"pop":""}">${starsNow}</span>${pendStars?`<span class="pendchip" title="waiting for a grown-up to check">+${pendStars}</span>`:""}</button>
         <button class="jar kinddoor" onclick="openKindness('${kid.id}')" aria-label="Star points: ${partial} of 5${unseen.length?`, ${unseen.length} new`:""}" title="Kindness star points">${starWedges(partial,26,kindPop?"pop":"")}<span class="${kindPop?"pop":""}">${partial}<small>/5</small></span></button>
         <button class="moneydoor" onclick="openMoney('${kid.id}')" aria-label="My money${kb.holding>0?`, ${fmtMoney(kb.holding)} waiting for you`:""}">💰 <span class="${moneyPop?"pop":""}">${fmtMoney(kidTotal)}</span>${kb.holding>0?`<span class="pendchip money" title="waiting for you to pick a jar">+${fmtMoney(kb.holding)}</span>`:""}</button>
@@ -3448,14 +3450,15 @@ function cloudSubscribe(){
   ch.on("postgres_changes",{event:"*",schema:"public",table:"board_state",filter:`family_id=eq.${fid}`},payload=>{
     const doc=payload.new?.doc; if(!doc) return; const j=JSON.stringify(pickState(doc)); if(j===cloud.stateSynced) return;
     Object.assign(state.data,pickState(doc)); cloud.stateSynced=j; remoteRender(); });
-  ch.subscribe(status=>{ cloud.live=status==="SUBSCRIBED"; if(status==="CLOSED"||status==="CHANNEL_ERROR"||status==="TIMED_OUT") scheduleResync(); }); // Safari drops the socket when the iPad sleeps
+  ch.subscribe(status=>{ if(cloud.channel!==ch) return; // an old channel we closed ourselves: ignore (v0.43.1: this used to schedule a resync, which closed the channel again, forever)
+    cloud.live=status==="SUBSCRIBED"; if(status==="CHANNEL_ERROR"||status==="TIMED_OUT") scheduleResync(); });
   cloud.channel=ch;
 }
-let resyncTimer=null, resyncing=false;
-function scheduleResync(){ clearTimeout(resyncTimer); resyncTimer=setTimeout(cloudResync,1500); }
+let resyncTimer=null, resyncing=false, lastResync=0;
+function scheduleResync(){ clearTimeout(resyncTimer); resyncTimer=setTimeout(cloudResync,Math.max(1500,30000-(Date.now()-lastResync))); } // never more than one channel-driven resync per 30s
 async function cloudResync(){ // v0.42.4: pull the family board again and re-open the live channel; used when the page comes back to the foreground or the channel drops
-  if(!cloud.ready||!cloud.sb||!cloud.fid||resyncing||cloud.pushing||document.visibilityState==="hidden"){ if(cloud.pushing) scheduleResync(); return; } resyncing=true;
-  try{ const ae=document.activeElement; if(ae&&(ae.tagName==="TEXTAREA"||ae.tagName==="INPUT")){ scheduleResync(); return; } // never clobber typing
+  if(!cloud.ready||!cloud.sb||!cloud.fid||resyncing||cloud.pushing||savePending||document.visibilityState==="hidden"){ if(cloud.pushing||savePending) scheduleResync(); return; } resyncing=true; lastResync=Date.now();
+  try{ const ae=document.activeElement; if(ae&&(ae.tagName==="TEXTAREA"||ae.tagName==="INPUT"||ae.tagName==="SELECT")){ scheduleResync(); return; } // never clobber typing or a change being made
     if(await cloudPull()){ try{ localStorage.setItem(KEY,JSON.stringify(state.data)); }catch(e){} generateDay(state.data,state.now); generateRuns(state.data,state.now); render(); }
     cloudSubscribe(); }
   catch(e){ console.warn("cloud resync failed",e); }
