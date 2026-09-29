@@ -11,6 +11,7 @@
 :root{
   --bg:#F0F2EC; --card:#FFFFFF; --ink:#26332B; --muted:#6C7A6F; --line:#DCE2D8;
   --star:#F5B301; --star-soft:#FBEECF;      /* system color: stars, fixed on every screen */
+  --star-bright:#FFF23F;                    /* lit star-point wedges in the kid header only, where gold disappears against the sunny hue */
   --money:#2E9E4F; --money-soft:#E3F3E7;    /* system color: money, fixed on every screen */
   --adult:#4A6455; --ok:#4E8F5B; --pending:#C08A3E; --pending-soft:#F6EBD9;
   --r:14px;
@@ -138,6 +139,13 @@ button.rrowk{display:flex;align-items:center;gap:10px;width:100%;text-align:left
 .school .seg button{padding:4px 12px;font-size:.85rem;font-family:"Fredoka";color:var(--k-muted);background:#fff}
 .school .seg button.on{background:var(--k-accent);color:var(--k-ink);font-weight:600}
 .dcard.later .school,.dcard.done .school,.dcard.none .school{opacity:1}
+.wxcard{padding:10px 14px;display:flex;flex-direction:column;gap:4px;background:#fff;border:1px solid var(--k-jar)}
+.wxcard .wxline{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-family:"Fredoka";line-height:1.1}
+.wxcard .wxic{font-size:1.5rem;align-self:center}
+.wxcard .wxnow,.wxcard .wxlater{font-size:1.5rem;font-weight:700;color:var(--k-ink)}
+.wxcard .wxsep{font-size:.85rem;color:var(--k-muted);margin-right:6px}
+.wxcard .wxword{font-size:.95rem;color:var(--k-muted);margin-left:auto}
+.wxcard .wxhint{font-size:1rem;color:var(--k-ink);font-weight:500}
 .sprow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .sprow input[type=text]{width:90px}
 .sprow .days{display:inline-flex;gap:3px}
@@ -347,6 +355,9 @@ a.chip{color:var(--adult)}
 .mp .jar.j-spend{border-top-color:var(--k-spend)} .mp .jar.j-save{border-top-color:var(--k-save)} .mp .jar.j-share{border-top-color:var(--k-share)}
 .mp .jar.tap{cursor:pointer;outline:4px dashed var(--money);outline-offset:-4px}
 .mp .jar.tap:active{transform:scale(.97)}
+.mp .jar.tap.over{transform:scale(1.05);box-shadow:0 0 0 5px var(--money);outline-style:solid}
+.mp .jar.wait.grab{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.dragcoin{position:fixed;z-index:1000;pointer-events:none;transform:translate(-50%,-50%);width:72px;height:72px;border-radius:50%;background:var(--money);color:#fff;font-weight:700;font-size:1.5rem;display:grid;place-items:center;box-shadow:0 8px 18px rgba(0,0,0,.25);font-family:"Fredoka"}
 .mp .between{display:flex;flex-direction:column;gap:6px;align-items:center;justify-self:center}
 .mp .move{background:var(--k-accent);color:var(--k-ink);font-weight:700;font-size:1.3rem;border-radius:999px;width:66px;padding:8px 0}
 .mp .move:disabled{opacity:.3;cursor:default}
@@ -363,8 +374,14 @@ a.chip{color:var(--adult)}
 .mp .bar{height:26px;background:var(--k-jar);border-radius:999px;overflow:hidden;margin-top:8px}
 .mp .bar div{height:100%;background:var(--k-accent);border-radius:999px;transition:width .8s ease}
 .mp .wish{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-.mp .wish .wbtn{width:140px;background:var(--k-soft);border-radius:20px;padding:12px;color:var(--k-ink);font-weight:600;font-size:1.05rem;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
-.mp .wish .wbtn .img{width:96px;height:96px;border-radius:16px;background:#fff;display:grid;place-items:center;font-size:2.6rem}
+.mp .wish .wbtn{width:164px;background:var(--k-soft);border-radius:20px;padding:12px;color:var(--k-ink);font-weight:600;font-size:1.05rem;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
+.mp .wish .wbtn .img{width:132px;height:132px;border-radius:18px;background:#fff;display:grid;place-items:center;font-size:2.6rem;overflow:hidden}
+.mp .wish .wbtn .img img{width:100%;height:100%;object-fit:cover}
+.money-adult .gitem{display:flex;gap:10px;align-items:flex-start}
+.money-adult .gpic{width:56px;height:56px;border-radius:12px;background:var(--star-soft);display:grid;place-items:center;font-size:1.7rem;overflow:hidden;flex:none;border:1px solid var(--line)}
+.money-adult .gpic img{width:100%;height:100%;object-fit:cover}
+.money-adult .gpicbtns{display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap}
+.money-adult .gtable .gpicbtns input[type=text]{width:44px;text-align:center;font-size:1.1rem;padding:2px 4px}
 .mp .wish .wbtn.unsure{background:transparent;border:4px dashed var(--k-lock);color:var(--k-main)}
 .mp .wish .wbtn.unsure .img{background:transparent}
 .mp .wish .wbtn .rank{display:flex;gap:6px}
@@ -373,6 +390,30 @@ a.chip{color:var(--adult)}
 .mp .wish .wbtn .price{font-size:.85rem;color:var(--k-muted);font-weight:500}
 .mp .wish .wbtn .savebtn{background:var(--k-accent);color:var(--k-ink);border-radius:999px;padding:6px 12px;font-weight:700;font-size:.95rem}
 .mp .wish .wbtn .savebtn:disabled{opacity:.4}
+/* ranked list rows (wish list; ideas list later): top row is #1 */
+.mp .rlist{width:100%;display:flex;flex-direction:column;gap:8px;text-align:left}
+.mp .rlist .empty{text-align:center;color:var(--k-muted)}
+.mp .rwrap{display:flex;align-items:center;gap:14px}
+.mp .rwrap .trash{flex:none;width:44px;height:44px;border-radius:999px;background:#fff;border:2px solid var(--k-soft);font-size:1.25rem;color:#b3543f}
+.mp .rwrap .trash.sure{width:auto;padding:0 12px;background:#b3543f;color:#fff;border-color:#b3543f;font-family:"Fredoka";font-weight:700;font-size:.95rem}
+.mp .rrowk2{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:var(--k-soft);border-radius:18px;padding:10px 10px 10px 8px;color:var(--k-ink)}
+.mp .rrowk2 .num{width:30px;flex:none;text-align:center;font-family:"Fredoka";font-weight:700;font-size:1.35rem;color:var(--k-main)}
+.mp .rrowk2 .tags{display:flex;gap:4px}
+.mp .rrowk2 .tags button{width:36px;height:36px;border-radius:999px;background:#fff;font-size:1.1rem;border:2px solid #fff}
+.mp .rrowk2 .tags button.on{border-color:var(--k-main);background:var(--k-accent)}
+.mp .sechead{font-size:1.15rem;margin:10px 0 0;text-align:left;width:100%;display:flex;align-items:baseline;gap:8px}
+.mp .sechead small{font-size:.85rem;color:var(--k-muted);font-weight:500}
+.mp .rrowk2 .pic{width:72px;height:72px;border-radius:14px;background:#fff;display:grid;place-items:center;font-size:2.2rem;overflow:hidden;flex:none}
+.mp .rrowk2 .pic img{width:100%;height:100%;object-fit:cover}
+.mp .rrowk2 .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.mp .rrowk2 .txt b{font-size:1.15rem;font-weight:700;line-height:1.2}
+.mp .rrowk2 .txt span{font-size:.9rem;color:var(--k-muted);font-weight:500}
+.mp .rrowk2 .savebtn{background:var(--k-accent);color:var(--k-ink);border-radius:999px;padding:8px 14px;font-weight:700;font-size:.95rem;white-space:nowrap}
+.mp .rrowk2 .savebtn:disabled{opacity:.4}
+.mp .rrowk2 .rank{display:flex;flex-direction:column;gap:4px}
+.mp .rrowk2 .rank button{background:#fff;border-radius:999px;width:36px;height:32px;font-size:.9rem}
+.mp .rrowk2 .rank button:disabled{opacity:.3}
+@media (max-width:520px){ .mp .rrowk2{flex-wrap:wrap} .mp .rrowk2 .savebtn{order:5;width:100%;margin-top:4px} }
 .mp .chart{width:100%;text-align:left}
 .mp .chart h2{font-size:1.2rem;margin:0 0 6px;font-weight:600}
 .mp .chart svg{width:100%;height:auto;display:block}
@@ -380,9 +421,16 @@ a.chip{color:var(--adult)}
 .mp .doorbtn{background:var(--k-soft);color:var(--k-ink);border-radius:999px;padding:10px 18px;font-weight:600;font-size:1.05rem}
 .mp .newwish{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
 .mp .newwish input{font-family:inherit;font-size:1.05rem;border:2px solid var(--k-lock);border-radius:12px;padding:8px 10px}
+.mp .newwish .wprev{width:64px;height:64px;border-radius:14px;background:#fff;display:grid;place-items:center;font-size:2rem;overflow:hidden;flex:none;border:3px dashed var(--k-lock);cursor:pointer;padding:0}
+.mp .newwish .wprev.open{border-style:solid;border-color:var(--k-main)}
+.mp .newwish .wprev img{width:100%;height:100%;object-fit:cover}
+.mp .emojis .photobtn{width:auto;padding:0 12px;font-size:.95rem;font-family:"Fredoka";font-weight:600;background:var(--k-accent);color:var(--k-ink);border-radius:999px}
+.wishdoor{padding:6px 10px;font-size:1.25rem}
 .mp .emojis{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
 .mp .emojis button{font-size:1.4rem;width:40px;height:40px;border-radius:10px}
 .mp .emojis button.on{background:var(--k-soft)}
+.mp .emojis .anyemoji{width:64px;height:40px;border:3px dashed var(--k-lock);border-radius:10px;font-size:1.4rem;text-align:center;background:#fff;padding:0}
+.mp .emojis .anyemoji::placeholder{font-size:.8rem;color:var(--k-muted)}
 .mp .story{width:100%;text-align:left}
 .mp .story .day{font-size:.85rem;color:var(--k-muted);margin:12px 0 4px;font-weight:600}
 .mp .ev{display:flex;gap:12px;align-items:center;background:#fff;border-radius:16px;padding:10px 12px;margin-bottom:6px}
@@ -484,7 +532,7 @@ a.chip{color:var(--adult)}
 .kinddoor{gap:4px;padding-left:10px}
 .kinddoor small{font-size:.75rem;opacity:.85}
 .kinddoor .kstar .wedge{fill:rgba(255,255,255,.3);stroke:rgba(255,255,255,.7);stroke-width:3}
-.kinddoor .kstar .wedge.on{fill:var(--star)}
+.kinddoor .kstar .wedge.on{fill:var(--star-bright);stroke:#fff} /* header badge only: bright yellow reads on every hue (gold vanished on the sunny header) */
 .kinddoor .kstar.pop{animation:pop .5s ease}
 .kindbanner{background:var(--star-soft);border:2px solid var(--star);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:"Fredoka";font-size:1.05rem}
 .kindbanner button{background:var(--star);color:#3a2a00;border-radius:999px;padding:8px 16px;font-family:"Fredoka";font-weight:600}
@@ -768,22 +816,32 @@ function goalsFor(data,kidId){ return data.goals.filter(g=>g.kid===kidId); }
 function activeGoal(data,kidId){ return goalsFor(data,kidId).find(g=>g.status==="active"&&g.currency==="money"); }
 function achievedUnbought(data,kidId){ return goalsFor(data,kidId).filter(g=>g.status==="achieved"&&!data.money.some(r=>r.goalId===g.id&&r.type==="purchase")); }
 function wishlist(data,kidId){ return goalsFor(data,kidId).filter(g=>g.status==="wishlist"&&g.currency==="money").sort((a,b)=>(a.rank??99)-(b.rank??99)); }
+/* occasions (schema v1.11): a wish can be flagged for an occasion (birthday, Christmas) instead of allowance; flagged wishes sit in their own section, numbered from 1, and can't become a savings goal */
+function occasions(data){ return (data||state.data).settings.occasions||[]; }
+function occasionOf(data,id){ return occasions(data).find(o=>o.id===id)||null; }
+function wishSection(data,kidId,occ){ return wishlist(data,kidId).filter(g=>(g.occasion||null)===(occ||null)); }
+function allowanceWishes(data,kidId){ return wishSection(data,kidId,null); }
+function occasionDate(data,occ,kidId){ // next date this occasion falls on: a kid's birthday from their birthdate, a fixed month/day otherwise
+  const o=occasionOf(data,occ); if(!o) return null; const t=todayKey(state.now), y=+t.slice(0,4); let m,d;
+  if(o.id==="birthday"){ const p=data.people.find(x=>x.id===kidId); if(!p?.birthdate) return null; [,m,d]=p.birthdate.split("-").map(Number); } else if(o.month){ m=o.month; d=o.day||1; } else return null;
+  const mk=yy=>`${yy}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`; return mk(y)>=t?mk(y):mk(y+1); }
+function setWishOccasion(data,goalId,occ){ const g=data.goals.find(x=>x.id===goalId); if(!g||g.status!=="wishlist") return; g.occasion=occ||null; if(!g.occasion) delete g.occasion; g.rank=99; renumber(data,g.kid); }
 function addWish(data,kidId,title,emoji){
-  const g={id:nextId(data,"g"),kid:kidId,title,emoji,currency:"money",status:"wishlist",addedAt:todayKey(new Date()),rank:wishlist(data,kidId).length,onHand:false,url:"",notes:""};
+  const g={id:nextId(data,"g"),kid:kidId,title,emoji,currency:"money",status:"wishlist",addedAt:todayKey(new Date()),rank:allowanceWishes(data,kidId).length,onHand:false,url:"",notes:""};
   data.goals.push(g); return g;
 }
 function activateGoal(data,goalId){ // one active per currency per child, enforced by flow: the current one goes back to the wishlist
-  const g=data.goals.find(x=>x.id===goalId); if(!g||g.target==null) return false;
+  const g=data.goals.find(x=>x.id===goalId); if(!g||g.occasion) return false; // an occasion wish isn't an allowance goal; a missing price is fine (v0.40.1), the goal just can't be reached until it has one
   const cur=activeGoal(data,g.kid); if(cur&&cur.id!==g.id){ cur.status="wishlist"; cur.rank=-1; renumber(data,cur.kid); }
   g.status="active"; g.activatedAt=todayKey(new Date());
   checkGoals(data,g.kid); return true;
 }
-function renumber(data,kidId){ wishlist(data,kidId).forEach((g,i)=>g.rank=i); }
-function moveWish(data,goalId,dir){ const g=data.goals.find(x=>x.id===goalId); const list=wishlist(data,g.kid); const i=list.indexOf(g), j=i+dir; if(j<0||j>=list.length) return; list[i].rank=j; list[j].rank=i; }
+function renumber(data,kidId){ for(const occ of [null,...occasions(data).map(o=>o.id)]) wishSection(data,kidId,occ).forEach((g,i)=>g.rank=i); } // each section numbers from 1
+function moveWish(data,goalId,dir){ const g=data.goals.find(x=>x.id===goalId); const list=wishSection(data,g.kid,g.occasion); const i=list.indexOf(g), j=i+dir; if(j<0||j>=list.length) return; list[i].rank=j; list[j].rank=i; }
 function dropGoal(data,goalId){ const g=data.goals.find(x=>x.id===goalId); if(!g) return; g.status="dropped"; g.droppedAt=todayKey(new Date()); renumber(data,g.kid); }
 function checkGoals(data,kidId){ // achieved fires when save ≥ target; the purchase row (adult) closes it
   const g=activeGoal(data,kidId); if(!g) return null;
-  if(balances(data,kidId).save>=g.target){ g.status="achieved"; g.achievedAt=todayKey(new Date()); return g; }
+  if(g.target!=null&&balances(data,kidId).save>=g.target){ g.status="achieved"; g.achievedAt=todayKey(new Date()); return g; }
   return null;
 }
 function recordPurchase(data,goalId,amount,date){
@@ -1060,6 +1118,49 @@ async function loadLunch(){ // same-origin file written by .github/workflows/lun
   try{ const r=await fetch("lunch.json?v="+todayKey(new Date()),{cache:"no-store"}); if(!r.ok) throw 0; state.lunch=await r.json(); }
   catch(e){ state.lunch=null; }
 }
+/* ---- weather (v0.37): Open-Meteo, keyless, fetched straight from the device; hourly values sliced by the family's dayparts.
+   Lives in state.wx (never in data, never synced); absent rather than stale when the fetch fails. ---- */
+const WX_CODES=[[0,"☀️","Sunny"],[1,"🌤","Mostly sunny"],[2,"⛅","Partly cloudy"],[3,"☁️","Cloudy"],[45,"🌫","Foggy"],[48,"🌫","Foggy"],[51,"🌦","Drizzle"],[53,"🌦","Drizzle"],[55,"🌦","Drizzle"],[56,"🌦","Icy drizzle"],[57,"🌦","Icy drizzle"],
+  [61,"🌧","Rain"],[63,"🌧","Rain"],[65,"🌧","Heavy rain"],[66,"🌧","Icy rain"],[67,"🌧","Icy rain"],[71,"🌨","Snow"],[73,"🌨","Snow"],[75,"🌨","Heavy snow"],[77,"🌨","Snow"],[80,"🌦","Showers"],[81,"🌧","Showers"],[82,"🌧","Heavy showers"],[85,"🌨","Snow showers"],[86,"🌨","Snow showers"],[95,"⛈","Thunderstorms"],[96,"⛈","Thunderstorms"],[99,"⛈","Thunderstorms"]];
+function wxCode(c){ const m=WX_CODES.find(x=>x[0]===c)||WX_CODES[3]; return {ic:m[1],word:m[2]}; }
+function wxCfg(){ return state.data?.settings?.weather||null; }
+async function loadWeather(force){ const W=wxCfg(); if(!W||W.lat==null||W.lon==null){ state.wx=null; return; }
+  const now=Date.now(), dk=todayKey(new Date());
+  if(!force&&state.wx&&state.wx.day===dk&&state.wx.key===`${W.lat},${W.lon}`&&now-state.wx.at<60*60*1000) return; // an hour is plenty for a forecast
+  try{ const u=`https://api.open-meteo.com/v1/forecast?latitude=${W.lat}&longitude=${W.lon}&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto&forecast_days=2`;
+    const r=await fetch(u); if(!r.ok) throw 0; const j=await r.json();
+    const hours=j.hourly.time.map((t,i)=>({t,day:t.slice(0,10),h:+t.slice(11,13),temp:Math.round(j.hourly.temperature_2m[i]),pop:j.hourly.precipitation_probability[i]??0,code:j.hourly.weather_code[i]}));
+    const daily=j.daily.time.map((t,i)=>({day:t,code:j.daily.weather_code[i],hi:Math.round(j.daily.temperature_2m_max[i]),lo:Math.round(j.daily.temperature_2m_min[i])}));
+    state.wx={at:now,day:dk,key:`${W.lat},${W.lon}`,hours,daily,error:null}; }
+  catch(e){ state.wx=null; } }
+function wxHourOf(t){ return +String(t).split(":")[0]; }
+function wxSlice(dk,h0,h1){ return (state.wx?.hours||[]).filter(x=>x.day===dk&&x.h>=h0&&x.h<h1); } // [h0,h1)
+function wxDaypartHours(dp){ const ds=dayparts(), i=ds.findIndex(d=>d.key===dp); if(i<0) return [0,24]; return [wxHourOf(ds[i].start), i<ds.length-1?wxHourOf(ds[i+1].start):24]; }
+function wxToday(){ // the getting-dressed numbers: temperature now (or at the start of the morning, if it's earlier), the warmest point through the afternoon, and rain odds over the same stretch
+  const W=wxCfg(), X=state.wx; if(!W||!X) return null; const dk=todayKey(state.now), d=X.daily.find(x=>x.day===dk); if(!d) return null;
+  const nowH=state.now.getHours(), [mStart]=wxDaypartHours("morning"), [eStart]=wxDaypartHours("evening");
+  const h0=Math.max(nowH,mStart), span=wxSlice(dk,h0,Math.max(eStart,h0+1)), atNow=X.hours.find(x=>x.day===dk&&x.h===h0)||span[0];
+  if(!atNow) return null;
+  const later=span.length?Math.max(...span.map(x=>x.temp)):d.hi, pop=span.length?Math.max(...span.map(x=>x.pop)):0;
+  const c=wxCode(d.code), shorts=later>=W.shortsAtLeast, rain=pop>=W.rainAtLeast;
+  const hint=[rain?"Rain gear today.":"", shorts?"Hot day, wear shorts.":""].filter(Boolean).join(" "); // only what they can't judge from the doorstep: rain later, heat later. Jackets and pants are their call.
+  return {ic:c.ic,word:c.word,now:atNow.temp,later,hi:d.hi,lo:d.lo,pop,shorts,rain,hint}; }
+function wxBlockFlags(dp,day){ // afternoon and evening only say something when a threshold is crossed: rain likely, hot, or chilly at practice time
+  const W=wxCfg(), X=state.wx; if(!W||!X||dp==="morning"||dp==="midday") return [];
+  const dk=todayKey(state.now), [h0,h1]=wxDaypartHours(dp), s=wxSlice(dk,h0,h1); if(!s.length) return [];
+  const pop=Math.max(...s.map(x=>x.pop)), hi=Math.max(...s.map(x=>x.temp)), out=[];
+  if(pop>=W.rainAtLeast) out.push({ic:"🌧",text:`Rain likely this ${dp} (${pop}%)`});
+  if(hi>=W.hotAtLeast) out.push({ic:"🔥",text:`Hot this ${dp}: ${hi}°`});
+  const outing=(day?.items||[]).filter(x=>x.dp===dp&&x.time&&x.place&&x.place.org.kind!=="school").sort((a,b)=>a.time.localeCompare(b.time))[0]; // fall practices run cold once the sun drops
+  if(outing){ const at=s.find(x=>x.h===wxHourOf(outing.time))||s[s.length-1]; if(at.temp<W.chillyBelow) out.push({ic:"🧥",text:`Long sleeves for ${outing.name||"practice"}: ${at.temp}° at ${fmtHour(outing.time)}`}); }
+  return out; }
+function weatherStripHTML(){ const w=wxToday(); if(!w) return "";
+  return `<div class="card wxcard"><div class="wxline"><span class="wxic">${w.ic}</span><span class="wxnow">${w.now}°</span><span class="wxsep">now</span><span class="wxlater">${w.later}°</span><span class="wxsep">later</span><span class="wxword">${w.word}${w.rain?` · ${w.pop}% rain`:""}</span></div>${w.hint?`<div class="wxhint">${w.hint}</div>`:""}</div>`; }
+window.setWeatherField=(k,v)=>{ const W=state.data.settings.weather; if(k==="place"){ W.place=v.trim(); } else { const x=parseFloat(v); if(!isNaN(x)) W[k]=x; } save(); render(); if(k==="lat"||k==="lon") loadWeather(true).then(render); };
+window.findWeatherPlace=async()=>{ const q=($("#wx-place")?.value||"").trim(); if(!q){ toast("Type a city or zip"); return; }
+  try{ const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=en&format=json`); const j=await r.json(); const g=j.results?.[0]; if(!g){ toast("Couldn't find that place"); return; }
+    const W=state.data.settings.weather; W.place=[g.name,g.admin1,g.country_code].filter(Boolean).join(", "); W.lat=g.latitude; W.lon=g.longitude; save(); render(); loadWeather(true).then(render); toast(`Weather set for ${W.place}`); }
+  catch(e){ toast("Couldn't look that up right now"); } };
 function lunchChoice(data,dk,kidId){ return data.settings.lunchChoices?.[dk]?.[kidId]||""; }
 window.setLunch=(kidId,v)=>{ const S=state.data.settings, dk=todayKey(state.now); S.lunchChoices=S.lunchChoices||{}; S.lunchChoices[dk]=S.lunchChoices[dk]||{};
   if(S.lunchChoices[dk][kidId]===v) delete S.lunchChoices[dk][kidId]; else S.lunchChoices[dk][kidId]=v; save(); render(); };
@@ -1088,6 +1189,7 @@ function placesStripHTML(kid,dk,dp){ // per daypart card: Morning holds all-day 
       lines.push(`<div class="sl"><span class="ic">🍽</span>${day.lunch.items?`<span class="txt">${day.lunch.items.join(" · ")}</span>`:`<span class="txt muted">${day.lunch.msg}</span>`}</div>
       <div class="sl"><span class="muted" style="font-size:.85rem">Lunch today:</span><span class="seg"><button class="${ch==="buy"?"on":""}" onclick="setLunch('${kid.id}','buy')">Buying</button><button class="${ch==="pack"?"on":""}" onclick="setLunch('${kid.id}','pack')">Packing</button></span></div>`); }
   }
+  for(const f of wxBlockFlags(dp,day)) lines.push(`<div class="sl"><span class="ic">${f.ic}</span><span class="txt">${f.text}</span></div>`); // weather only when it crosses a threshold
   for(const it of day.items.filter(x=>x.dp===dp)) lines.push(`<div class="sl"><span class="ic">${it.ic}</span><span class="txt">${it.text}</span></div>`);
   if(dp==="evening"){ // tonight's preview of tomorrow: closures, events, early pickup, anything to bring
     const nk=addDaysKey(dk,1), nd=kidDay(D,kid,nk), t=`<span class="muted">Tomorrow:</span>`;
@@ -1114,7 +1216,8 @@ function renderAdultSchool(dk){ // today at the kids' places: what's on the sche
   if(!rows) return "";
   const L=lunchFor(dk), showMenu=L&&kids.some(k=>kidDay(D,k,dk).lunch);
   const menu=showMenu?(L.items?`<div class="fyirow rmeta">Menu: ${L.items.join(" · ")}</div>`:`<div class="fyirow rmeta">${L.msg}</div>`):"";
-  return `<div class="sect" style="margin-top:14px"><h3>Today at their places</h3><div class="card">${rows}${menu}</div></div>`;
+  const w=wxToday(), wxRow=w?`<div class="fyirow">${w.ic} <b>${w.now}°</b> now · <b>${w.later}°</b> later · ${w.word}${w.rain?` · ${w.pop}% rain`:""}${w.hint?` <span class="rmeta">· ${w.hint}</span>`:""}</div>`:"";
+  return `<div class="sect" style="margin-top:14px"><h3>Today at their places</h3><div class="card">${wxRow}${rows}${menu}</div></div>`;
 }
 
 /* ---- dayparts: four quarters of the waking day + anytime ---- */
@@ -1197,6 +1300,9 @@ function migrate(data){
   if(S.interestRate===undefined) S.interestRate=0.05;
   if(S.starsPerDollar===undefined) S.starsPerDollar=10;
   if(!S.dayparts||S.dayparts.length!==4) S.dayparts=DEFAULT_DAYPARTS();
+  if(!S.weather) S.weather={place:"Escondido, CA",lat:33.1192,lon:-117.0864,shortsAtLeast:80,rainAtLeast:30,hotAtLeast:90,chillyBelow:60}; // v0.37: family-level, editable in Settings › General
+  if(!S.occasions) S.occasions=[{id:"birthday",name:"Birthday",icon:"🎂"},{id:"christmas",name:"Christmas",icon:"🎄",month:12,day:25}]; // schema v1.11: occasions flow through the app (wish flags now, party planning later)
+  if(S.weather.chillyBelow===undefined){ S.weather.chillyBelow=60; S.weather.shortsAtLeast=80; delete S.weather.jacketBelow; } // v0.38: jacket hint dropped, shorts only on hot days
   const HUE_BY_SLOT={kid1:350,kid2:262,kid3:190,kid4:68};
   for(const p of data.people){ // v1.4 → v1.5: type→role, color slot→hue, per-kid weekly amounts and bonus cap
     if(p.type&&!p.role){ p.role=p.type; delete p.type; }
@@ -1338,7 +1444,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.35 · kindness star points";
+const BUILD="v0.40.2 · picture picker hidden behind the picture";
 const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
@@ -1915,7 +2021,7 @@ function renderKidCol(kid,dk){
     return `<div class="card dcard ${mode} ${isNow?"cur":""}"><div class="dband"><span class="dico">${dpIcon(dp)}</span><span class="dname">${dpLabel(dp,kid)}</span><span class="drange">| ${dpRange(dp)}</span></div>${strip}${rows}${clear}</div>`;
   }).join("");
   const allMustDone=info.every(x=>x.done)&&must.every(jobDone);
-  const todayHTML=`${cards}
+  const todayHTML=`${weatherStripHTML()}${cards}
     ${allMustDone&&(info.length||must.length)?`<div class="allnow card">🎉 Everything done today!</div>`:""}`;
   // --- EXTRA STARS card: open, optional chores as an offer; grouped by state, empty groups hidden ---
   const grabs=extra.filter(x=>!["done","verified","missed","skipped"].includes(x.i.state)).map(x=>renderTile(x.i,kid)).join("")
@@ -1941,6 +2047,7 @@ function renderKidCol(kid,dk){
       <div class="doors"><button class="jar stardoor" onclick="openRewards('${kid.id}')" aria-label="${starsNow} stars${pendStars?`, ${pendStars} being checked`:""}">⭐ <span class="${starPop?"pop":""}">${starsNow}</span>${pendStars?`<span class="pendchip" title="waiting for a grown-up to check">+${pendStars}</span>`:""}</button>
         <button class="jar kinddoor" onclick="openKindness('${kid.id}')" aria-label="Star points: ${partial} of 5${unseen.length?`, ${unseen.length} new`:""}" title="Kindness star points">${starWedges(partial,26,kindPop?"pop":"")}<span class="${kindPop?"pop":""}">${partial}<small>/5</small></span></button>
         <button class="moneydoor" onclick="openMoney('${kid.id}')" aria-label="My money${kb.holding>0?`, ${fmtMoney(kb.holding)} waiting for you`:""}">💰 <span class="${moneyPop?"pop":""}">${fmtMoney(kidTotal)}</span>${kb.holding>0?`<span class="pendchip money" title="waiting for you to pick a jar">+${fmtMoney(kb.holding)}</span>`:""}</button>
+        <button class="moneydoor wishdoor" onclick="openMoney('${kid.id}','wish')" aria-label="My wish list" title="My wish list">❤️</button>
         <button class="huedoor ${hueOpen?"on":""}" onclick="toggleHue('${kid.id}')" aria-label="Pick my color" title="Pick my color"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
     </div>
     ${hueOpen?`<div class="huerow"><span>My color</span><span class="swatches">${HUE_PRESETS.map(h=>`<button data-hue="${h.h}" class="${kid.hue===h.h?"on":""}" title="${h.n}" style="background:oklch(0.76 0.19 ${h.h})" onclick="setHue('${kid.id}',${h.h})"></button>`).join("")}</span></div>`:""}
@@ -2047,7 +2154,7 @@ function renderAdult(dk){
   const fyi=D.log.slice(-5).reverse().map(l=>`<div class="fyirow">${l.msg}</div>`).join("");
   ensureRewards(D); ensureClaims(D);
   const reqs=D.redemptions.filter(r=>r.status==="requested"), over=overduePromises(D,state.now), claims=pendingClaims(D);
-  const unpriced=D.goals.filter(g=>g.currency==="money"&&g.status==="wishlist"&&g.target==null);
+  const unpriced=D.goals.filter(g=>g.currency==="money"&&(g.status==="wishlist"||g.status==="active")&&g.target==null&&!g.occasion); // occasion wishes don't need a price; an active goal without one is the most urgent
   const nReview=vq.length+reqs.length+over.length+claims.length+unpriced.length;
   return `<div class="sect"><h3>To review${nReview?` (${nReview})`:""}</h3>
       <div class="card vq">${vq.map(renderVerify).join("")}${reqs.map(renderReviewRequest).join("")}${over.map(renderReviewOverdue).join("")}${claims.map(renderReviewClaim).join("")}${unpriced.map(renderReviewPrice).join("")}${fyi}
@@ -2087,6 +2194,13 @@ function renderGeneralSettings(){ const D=state.data;
           <div class="row" style="border-bottom:none"><span style="font-weight:700">Dayparts</span><span class="rmeta">four blocks of the waking day</span></div>
           ${dayparts().map((d,i)=>`<div class="row"><span><input type="text" value="${d.icon}" onchange="setDaypart(${i},'icon',this.value)" style="width:40px"> <input type="text" value="${d.label}" onchange="setDaypart(${i},'label',this.value)" style="width:110px"></span>
             <span class="rmeta">starts <input type="time" value="${d.start}" onchange="setDaypart(${i},'start',this.value)"></span></div>`).join("")}
+          <div class="row" style="border-bottom:none"><span style="font-weight:700">Weather</span><span class="rmeta">${state.wx?`forecast loaded ${new Date(state.wx.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}`:"no forecast right now"}</span></div>
+          <div class="row"><span>Place</span><span><input type="text" id="wx-place" value="${D.settings.weather.place||""}" placeholder="City or zip" style="width:170px"> <button class="newbtn" onclick="findWeatherPlace()">Find</button> <span class="rmeta">${D.settings.weather.lat!=null?`${(+D.settings.weather.lat).toFixed(3)}, ${(+D.settings.weather.lon).toFixed(3)}`:"not set"}</span></span></div>
+          <div class="row"><span>Getting-dressed rules</span><span class="rmeta" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+            <label>Rain gear at <input type="text" inputmode="numeric" value="${D.settings.weather.rainAtLeast}" onchange="setWeatherField('rainAtLeast',this.value)" style="width:44px">% or more</label>
+            <label>"Hot day, wear shorts" at <input type="text" inputmode="numeric" value="${D.settings.weather.shortsAtLeast}" onchange="setWeatherField('shortsAtLeast',this.value)" style="width:44px">° or more</label>
+            <label>Long sleeves for practice below <input type="text" inputmode="numeric" value="${D.settings.weather.chillyBelow}" onchange="setWeatherField('chillyBelow',this.value)" style="width:44px">°</label>
+            <label>Hot flag on a block at <input type="text" inputmode="numeric" value="${D.settings.weather.hotAtLeast}" onchange="setWeatherField('hotAtLeast',this.value)" style="width:44px">°</label></span></div>
           <div class="row"><span>Allowance day</span>
             <select onchange="setAllowanceDay(this.value)">${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((n,i)=>`<option value="${i}" ${D.settings.allowanceDay===i?"selected":""}>${n}</option>`).join("")}</select></div>
           <div class="row"><span>Interest rate</span>
@@ -2317,7 +2431,7 @@ function renderReviewClaim(c){
     <div style="display:flex;flex-direction:column;gap:6px"><button class="act" style="background:var(--money)" onclick="mcConfirm('${c.id}')">Confirm</button><button class="act" style="background:var(--card);color:#8a3b2c;border:1.5px solid #b3543f" onclick="mcDecline('${c.id}')">Not quite</button></div></div>`; }
 function renderReviewPrice(g){
   return `<div class="tile"><div class="info"><div class="nm">${g.emoji||""} ${g.title} — ${nameOf(g.kid)}'s wish needs a price</div>
-      <div class="meta">added ${g.addedAt?md(g.addedAt):""} · until it has a price ${nameOf(g.kid)} can't save for it</div>
+      <div class="meta">added ${g.addedAt?md(g.addedAt):""}${g.status==="active"?` · <b>${nameOf(g.kid)} is saving for this now</b>, so it can't be reached until it has a price`:` · shows on the wish list without a price`}</div>
       <div class="meta" style="margin-top:6px;gap:6px">$<input type="text" inputmode="decimal" id="gp-${g.id}" placeholder="price" style="border:1px solid var(--line);border-radius:8px;padding:4px 6px;width:70px"><input type="text" id="gu-${g.id}" placeholder="https://" style="border:1px solid var(--line);border-radius:8px;padding:4px 6px;width:160px"><label class="d" style="margin:0"><input type="checkbox" id="go-${g.id}"> already bought</label></div></div>
     <button class="act" style="background:var(--adult)" onclick="setPriceFromReview('${g.id}')">Save</button></div>`; }
 window.sendBack=(idx)=>{ const inst=state.data.instances[idx]; inst.returnNote=($("#note_"+idx)?.value||"").trim(); inst.discussed=$("#disc_"+idx)?.checked||false;
@@ -2325,7 +2439,7 @@ window.sendBack=(idx)=>{ const inst=state.data.instances[idx]; inst.returnNote=(
 window.mcConfirm=(id)=>{ const v=parseFloat($("#mc-amt-"+id)?.value); if(!(v>0)){ toast("Enter the amount"); return; } confirmClaim(state.data,id,v); save(); render(); toast(`${fmtMoneyC(v)} added to the waiting jar`); };
 window.mcDecline=(id)=>{ declineClaim(state.data,id); save(); render(); };
 window.setPriceFromReview=(id)=>{ const g=state.data.goals.find(x=>x.id===id); const p=parseFloat($("#gp-"+id)?.value); if(!(p>0)){ toast("Enter a price"); return; }
-  g.target=r2(p); g.url=$("#gu-"+id)?.value||""; g.onHand=!!$("#go-"+id)?.checked; save(); render(); toast(`${g.title} priced at ${fmtMoneyC(p)}`); };
+  g.target=r2(p); g.url=$("#gu-"+id)?.value||""; g.onHand=!!$("#go-"+id)?.checked; if(g.status==="active") checkGoals(state.data,g.kid); save(); render(); toast(`${g.title} priced at ${fmtMoneyC(p)}`); };
 function renderAdultRoutine(r,dk){
   const D=state.data;
   if(r.tracking==="display"){
@@ -2471,7 +2585,9 @@ function mpBal(){ // ledger balances plus the moves not yet written
 }
 function mpRun(){ return pendingRuns(state.data,state.mp.kid)[0]||null; }
 function mpWriteMoves(){ const run=mpRun(); const date=run?run.date:todayKey(state.now);
-  for(const m of state.mp.moves) transfer(state.data,state.mp.kid,date,m.from,m.to,m.amt,run?.id);
+  const sums=new Map(); // one transfer per from→to pair: five taps on Save write "Put $5 in save", not five $1 lines
+  for(const m of state.mp.moves){ const k=m.from+">"+m.to; sums.set(k,r2((sums.get(k)||0)+m.amt)); }
+  for(const [k,amt] of sums){ if(amt<=0) continue; const [from,to]=k.split(">"); transfer(state.data,state.mp.kid,date,from,to,amt,run?.id); }
   state.mp.moves=[]; }
 window.mpNext=()=>{ state.mp.step++; save(); render(); };
 window.mpUndo=()=>{ state.mp.moves=[]; render(); };
@@ -2482,17 +2598,35 @@ window.mpCollect=()=>{ const run=mpRun(); if(!run) return;
   const btn=$("#mp-collect"); if(btn) btn.disabled=true;
   setTimeout(()=>{ postAllowance(state.data,run); state.mp.step=1; save(); render(); },950); };
 window.mpTapJar=(k)=>{ const b=mpBal(); if(b.holding<1) return; state.mp.moves.push({from:"holding",to:k,amt:1}); state.mp.bump=k; render(); };
+window.mpDragStart=(ev)=>{ // drag $1 from the waiting jar onto Spend or Save; dropping anywhere else does nothing (tap still works)
+  if(mpBal().holding<1||(ev.button&&ev.button!==0)) return; ev.preventDefault();
+  const ghost=document.createElement("div"); ghost.className="dragcoin"; ghost.textContent="$1"; document.body.appendChild(ghost);
+  const jarAt=e=>{ const el=document.elementFromPoint(e.clientX,e.clientY); return el&&el.closest(".mp .jar.tap"); };
+  const move=e=>{ ghost.style.left=e.clientX+"px"; ghost.style.top=e.clientY+"px"; const j=jarAt(e); document.querySelectorAll(".mp .jar.tap").forEach(x=>x.classList.toggle("over",x===j)); };
+  const end=e=>{ removeEventListener("pointermove",move); removeEventListener("pointerup",end); removeEventListener("pointercancel",end); ghost.remove();
+    const j=e.type==="pointerup"?jarAt(e):null; document.querySelectorAll(".mp .jar.over").forEach(x=>x.classList.remove("over"));
+    if(j) mpTapJar(j.dataset.jar); };
+  move(ev); addEventListener("pointermove",move); addEventListener("pointerup",end); addEventListener("pointercancel",end); };
 window.mpMove=(from,to)=>{ const b=mpBal(); if(b[from]<1) return; state.mp.moves.push({from,to,amt:1}); state.mp.bump=to; render(); };
-window.mpPick=(goalId)=>{ if(goalId){ if(!activateGoal(state.data,goalId)){ toast("Mom will add the price first"); return; } } state.mp.step=6; state.mp.mode="rest"; save(); render(); };
+window.mpPick=(goalId)=>{ if(goalId){ if(!activateGoal(state.data,goalId)){ toast("That one isn't a saving goal"); return; } } state.mp.step=6; state.mp.mode="rest"; save(); render(); };
 window.mpAddWish=()=>{ const t=$("#mp-wtitle").value.trim(); if(!t){ toast("What is it called?"); return; }
-  addWish(state.data,state.mp.kid,t,state.mp.emoji||"🎁"); state.mp.emoji=null; save(); render(); toast("Added to your wish list"); };
-window.mpEmoji=(e)=>{ state.mp.emoji=e; render(); };
+  const g=addWish(state.data,state.mp.kid,t,state.mp.emoji||WISH_ICON); if(state.mp.photo) g.image=state.mp.photo; state.mp.emoji=null; state.mp.photo=null; state.mp.pickOpen=false; save(); render(); toast("Added to your wish list"); };
+window.mpEmoji=(e)=>{ state.mp.emoji=e; state.mp.photo=null; state.mp.pickOpen=false; render(); };
+window.mpPickToggle=()=>{ state.mp.pickOpen=!state.mp.pickOpen; render(); if(state.mp.pickOpen) $("#mp-wtitle")?.blur(); }; // the picture is the door to the icon and photo choices (v0.40.2: too busy always open)
+function firstGrapheme(s){ s=(s||"").trim(); if(!s) return ""; try{ const it=new Intl.Segmenter(undefined,{granularity:"grapheme"}).segment(s)[Symbol.iterator]().next(); return it.done?"":it.value.segment; }catch(e){ return Array.from(s)[0]||""; } }
+window.mpEmojiTyped=(inp)=>{ // any emoji from the keyboard; updates in place so the title field keeps focus
+  let e=firstGrapheme(inp.value); if(e&&!/\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(e)) e=""; // letters and numbers aren't icons
+  if(inp.value!==e) inp.value=e; state.mp.emoji=e||null; if(e){ state.mp.photo=null; state.mp.pickOpen=false; render(); $("#mp-wtitle")?.focus(); return; } // a typed emoji is a choice: close the picker
+  const prev=$("#mp-wprev"); if(prev) prev.textContent=e||WISH_ICON;
+  document.querySelectorAll(".mp .emojis button").forEach(b=>b.classList.toggle("on",b.textContent===e)); };
 window.mpMoveWish=(id,dir)=>{ moveWish(state.data,id,dir); save(); render(); };
+window.mpFlag=(id,occ)=>{ setWishOccasion(state.data,id,occ); save(); render(); const o=occasionOf(state.data,occ); toast(o?`On your ${o.id==="birthday"?"birthday":o.name} list`:"Back on your wish list"); };
 window.mpDrop=(id)=>{ if(state.confirmDel!=="goal:"+id){ state.confirmDel="goal:"+id; render(); return; } dropGoal(state.data,id); state.confirmDel=null; save(); render(); };
-window.mpSaveFor=(id)=>{ if(activateGoal(state.data,id)){ save(); render(); toast("Saving for it!"); } else toast("Mom will add the price first"); };
+window.mpSaveFor=(id)=>{ if(activateGoal(state.data,id)){ save(); render(); toast("Saving for it!"); } else toast("That one isn't a saving goal"); };
 window.mpFilter=(f)=>{ state.mp.filter=f; state.mp.shown=8; render(); };
 window.mpMore=()=>{ state.mp.shown+=8; render(); };
-const EMOJIS=["🎁","🧸","🧱","⚾","🎮","📚","🎨","🚲","🪁","🎧","👟","🧩","🦖","🐰","🌈","🛴","⚽","🎸","🍦","🐶"];
+const EMOJIS=["❤️","⚾","🎮","📚","🎨","🐰","🍦"]; // short on purpose; photo and "any" cover the rest
+const WISH_ICON="❤️"; // default picture for a wish: the heart you tap to save something you want; rewards keep 🎁
 
 function renderMoneyPage(kidId){
   const D=state.data, kid=D.people.find(p=>p.id===kidId);
@@ -2516,9 +2650,10 @@ function renderMoneyPage(kidId){
 }
 function jarsHTML(b,opts={}){ // the three jars never move between screens; holding jar above when relevant
   const lockShare=`<span class="lock" title="Share money stays for other people">🔒</span>`;
-  const jar=(k,extra="")=>`<div class="jar j-${k} ${opts.tap&&k!=="share"&&opts.tap!=="none"?"tap":""} ${state.mp.bump===k?"bump":""}" ${opts.tap?`onclick="mpTapJar('${k}')"`:""}>${k==="share"?lockShare:""}<div class="amt">${fmtMoney(b[k])}</div><div class="lbl">${k[0].toUpperCase()+k.slice(1)}</div></div>`;
+  const jar=(k,extra="")=>`<div class="jar j-${k} ${opts.tap&&k!=="share"&&opts.tap!=="none"?"tap":""} ${state.mp.bump===k?"bump":""}" data-jar="${k}" ${opts.tap?`onclick="mpTapJar('${k}')"`:""}>${k==="share"?lockShare:""}<div class="amt">${fmtMoney(b[k])}</div><div class="lbl">${k[0].toUpperCase()+k.slice(1)}</div></div>`;
+  const canDrag=opts.source&&opts.tap&&opts.tap!=="none"; // both kids tried to drag the waiting money down to a jar, so that works too
   return `<div class="money" id="mp-money">
-    ${opts.waiting?`<div class="waiting"><div class="jar wait ${opts.source?"source":""}" id="mp-holding"><div class="amt">${fmtMoney(b.holding)}</div><div class="lbl">Waiting for you</div></div>${opts.choicecoin?`<div class="choicecoin">+ ${fmtMoney(opts.choicecoin)}<small>your choice</small></div>`:""}</div>`:""}
+    ${opts.waiting?`<div class="waiting"><div class="jar wait ${opts.source?"source":""} ${canDrag?"grab":""}" id="mp-holding" ${canDrag?`onpointerdown="mpDragStart(event)"`:""}><div class="amt">${fmtMoney(b.holding)}</div><div class="lbl">Waiting for you</div></div>${opts.choicecoin?`<div class="choicecoin">+ ${fmtMoney(opts.choicecoin)}<small>your choice</small></div>`:""}</div>`:""}
     ${opts.lane?`<div class="mlane" id="mp-lane"><svg id="mp-arrows"></svg></div>`:""}
     ${opts.coins?`<div class="strip coins">${["spend","save","share"].map(k=>`<div class="coin"><b>${fmtMoney(opts.coins[k])}</b><span>${k}</span></div>`).join("<div></div>")}</div>`:""}
     <div class="strip">${jar("spend")}<div class="between">${opts.gap1||""}</div>${jar("save")}<div class="between">${opts.gap2||""}</div>${jar("share")}</div>
@@ -2544,7 +2679,7 @@ function renderRunStep(kid,run){
       <div class="actions"><button class="go" id="mp-collect" onclick="mpCollect()">Collect allowance</button><button class="notnow" onclick="mpMode('rest')">Not now</button></div>`;
     case 1: { const snap=balances(D,kid.id), any=mp.moves.length>0, done=b.holding<1;
       setTimeout(drawMoneyArrows,0);
-      return `<div class="head"><h1>Your choice</h1><p>You have <b style="color:var(--k-main)">${fmtMoney(b.holding)}</b> waiting. Tap a jar to put $1 in it.</p></div>
+      return `<div class="head"><h1>Your choice</h1><p>You have <b style="color:var(--k-main)">${fmtMoney(b.holding)}</b> waiting. Tap a jar, or drag your money to it, to put $1 in.</p></div>
       ${jarsHTML(b,{waiting:true,source:true,lane:true,tap:done?"none":true,pills:snap})}
       <div class="actions">${any?`<button class="go" onclick="mpDoneMoves()">${done?"Done":"Done, leave the rest waiting"}</button><button class="notnow" onclick="mpUndo()">Undo</button>`
         :`<button class="go" onclick="mpNext()" ${done?"":"disabled"}>Done</button><button class="notnow" onclick="mpNext()">Not now, leave it waiting</button>`}</div>`; }
@@ -2566,17 +2701,17 @@ function renderRunStep(kid,run){
       setTimeout(()=>{ const bar=document.querySelector(".mp .bar div"); if(bar) bar.style.width=bar.dataset.pct+"%"; },30);
       return `<div class="head"><h1>${got?"You did it!":"Your goal"}</h1></div>${goalHTML(kid,g,note)}
       <div class="actions"><button class="go" onclick="${got?"mpNext()":"mpPick('')"}">${got?"Get it!":"Okay"}</button></div>`; }
-    case 5: { const list=wishlist(D,kid.id);
+    case 5: { const list=allowanceWishes(D,kid.id);
       return `<div class="head"><h1>What's next?</h1><p>Pick something to save for, or not yet. Both are fine.</p></div>
-      <div class="wish">${list.map(g=>`<button class="wbtn" onclick="mpPick('${g.id}')" ${g.target==null?'style="opacity:.55"':""}><div class="img">${g.emoji||"🎁"}</div>${g.title}<span class="price">${g.target==null?"Mom will add the price":fmtMoney(g.target)}</span></button>`).join("")}
+      <div class="wish">${list.map(g=>`<button class="wbtn" onclick="mpPick('${g.id}')"><div class="img">${goalIcon(g)}</div>${g.title}<span class="price">${g.target==null?"Mom will add the price":fmtMoney(g.target)}</span></button>`).join("")}
         <button class="wbtn unsure" onclick="mpPick('')"><div class="img">?</div>I'm not sure</button></div>`; }
     default: mp.mode="rest"; return renderResting(kid);
   }
 }
 function goalHTML(kid,g,note){
-  const save=balances(state.data,kid.id).save, pct=Math.min(100,Math.round(save/g.target*100));
-  return `<div class="goal"><div class="img">${g.image?`<img src="${g.image}" alt="">`:(g.emoji||"🎁")}</div><div class="info"><b>${g.title}</b><span>${fmtMoneyC(save)} of ${fmtMoneyC(g.target)}</span><div class="bar"><div data-pct="${pct}" style="width:0"></div></div></div></div>
-    <p>${note||"You are "+pct+"% there."}</p>`;
+  const save=balances(state.data,kid.id).save, priced=g.target!=null, pct=priced?Math.min(100,Math.round(save/g.target*100)):0;
+  return `<div class="goal"><div class="img">${goalIcon(g)}</div><div class="info"><b>${g.title}</b><span>${priced?`${fmtMoneyC(save)} of ${fmtMoneyC(g.target)}`:`You have ${fmtMoneyC(save)} saved. Mom is adding the price.`}</span><div class="bar"><div data-pct="${pct}" style="width:0"></div></div></div></div>
+    <p>${note||(priced?"You are "+pct+"% there.":"Keep saving!")}</p>`;
 }
 function renderResting(kid){
   const D=state.data, b=balances(D,kid.id), run=mpRun(), got=achievedUnbought(D,kid.id)[0], g=activeGoal(D,kid.id);
@@ -2610,18 +2745,27 @@ function renderGotMoney(kid){
 }
 window.mpGotMoney=()=>{ const v=parseFloat($("#mp-gotamt").value), from=$("#mp-gotfrom").value.trim(); if(!(v>0)){ toast("How much?"); return; }
   addClaim(state.data,state.mp.kid,v,from); state.mp.mode="rest"; save(); render(); toast("Sent! A grown-up will check it."); };
+function rankedRow(o){ // one row of a kid's ranked list: number · picture · title + subline · action · tags · ▲▼, then the trash can outside the card so small fingers don't hit it by accident. Shared by the wish list and, next, the ideas list.
+  return `<div class="rwrap"><div class="rrowk2 ${o.cls||""}"><div class="num">${o.n}</div><div class="pic">${o.pic}</div><div class="txt"><b>${o.title}</b>${o.sub?`<span>${o.sub}</span>`:""}${o.body||""}</div>
+    ${o.action||""}${o.tags||""}<span class="rank"><button onclick="${o.up}" ${o.first?"disabled":""} aria-label="Move up">▲</button><button onclick="${o.down}" ${o.last?"disabled":""} aria-label="Move down">▼</button></span></div>
+    <button class="trash ${o.confirm?"sure":""}" onclick="${o.drop}" title="Remove" aria-label="Remove">${o.confirm?"Sure?":"🗑"}</button></div>`; }
+function rankedListHTML(rows,empty){ return `<div class="rlist">${rows.length?rows.join(""):`<p class="empty">${empty}</p>`}</div>`; }
+function wishRows(kid,list){ const D=state.data, occs=occasions(D);
+  return list.map((w,i)=>rankedRow({n:i+1,pic:goalIcon(w),title:w.title,sub:w.occasion?"":(w.target==null?"Mom will add the price":fmtMoney(w.target)),
+    action:w.occasion?"":`<button class="savebtn" onclick="mpSaveFor('${w.id}')">Save for this</button>`,
+    tags:`<span class="tags">${occs.map(o=>`<button class="${w.occasion===o.id?"on":""}" onclick="mpFlag('${w.id}','${w.occasion===o.id?"":o.id}')" title="${w.occasion===o.id?"Back to my wish list":"Ask for this for "+o.name}" aria-label="${o.name}">${o.icon}</button>`).join("")}</span>`,
+    up:`mpMoveWish('${w.id}',-1)`,down:`mpMoveWish('${w.id}',1)`,first:i===0,last:i===list.length-1,drop:`mpDrop('${w.id}')`,confirm:state.confirmDel==="goal:"+w.id})); }
+function occasionHead(kid,o){ const dk=occasionDate(state.data,o.id,kid.id); const n=dk?daysBetween(todayKey(state.now),dk):null;
+  return `<h2 class="sechead">${o.icon} ${o.id==="birthday"?"For my birthday":"For "+o.name}${n!=null?`<small>${n===0?"today!":n===1?"tomorrow!":`${md(dk)} · ${n} days`}</small>`:""}</h2>`; }
 function renderWishPage(kid){
-  const D=state.data, list=wishlist(D,kid.id), g=activeGoal(D,kid.id), mp=state.mp;
-  return `<div class="head"><h1>${g?"Saving for":"What do you want to save for?"}</h1>${g?`<p>${g.emoji||""} ${g.title}</p>`:""}</div>
-    <h2 style="font-size:1.2rem;margin:0">My wish list</h2>
-    <div class="wish">${list.length?list.map((w,i)=>`<div class="wbtn"><button class="trash" onclick="mpDrop('${w.id}')" title="Not anymore">${state.confirmDel==="goal:"+w.id?"?":"✕"}</button><div class="img">${w.emoji||"🎁"}</div>${w.title}<span class="price">${w.target==null?"Mom will add the price":fmtMoney(w.target)}</span>
-        <button class="savebtn" onclick="mpSaveFor('${w.id}')" ${w.target==null?"disabled":""}>Save for this</button>
-        <span class="rank"><button onclick="mpMoveWish('${w.id}',-1)" ${i===0?"disabled":""}>▲</button><button onclick="mpMoveWish('${w.id}',1)" ${i===list.length-1?"disabled":""}>▼</button></span></div>`).join("")
-      :`<p>Nothing yet. Add something you'd like to save for.</p>`}</div>
-    <h2 style="font-size:1.2rem;margin:0">New wish</h2>
-    <div class="emojis">${EMOJIS.map(e=>`<button class="${mp.emoji===e?"on":""}" onclick="mpEmoji('${e}')">${e}</button>`).join("")}</div>
-    <div class="newwish"><span style="font-size:2rem">${mp.emoji||"🎁"}</span><input id="mp-wtitle" placeholder="What is it?" maxlength="40"><button class="go" style="font-size:1.05rem;padding:10px 22px" onclick="mpAddWish()">Add</button></div>
-    <div class="actions"><button class="notnow" onclick="mpMode('rest')">← My money</button></div>`;
+  const D=state.data, g=activeGoal(D,kid.id), mp=state.mp;
+  // v0.39: the add form comes first (a kid opening this page usually has a specific thing in mind), the shelf of wishes below it
+  return `<div class="head"><h1>My wish list</h1>${g?`<p>Saving for: ${g.emoji||""} ${g.title}</p>`:`<p>Add anything you'd like to save for.</p>`}</div>
+    <div class="newwish"><button id="mp-wprev" class="wprev ${mp.pickOpen?"open":""}" onclick="mpPickToggle()" title="Change the picture" aria-label="Change the picture">${mp.photo?`<img src="${mp.photo}" alt="">`:(mp.emoji||WISH_ICON)}</button><input id="mp-wtitle" placeholder="What is it?" maxlength="40"><button class="go" style="font-size:1.05rem;padding:10px 22px" onclick="mpAddWish()">Add</button></div>
+    ${mp.pickOpen?`<div class="emojis"><button class="photobtn" onclick="mpWishPhoto()">📷 ${mp.photo?"Change photo":"Photo"}</button>${mp.photo?`<button class="photobtn" onclick="mpWishPhotoClear()">✕ No photo</button>`:""}${EMOJIS.map(e=>`<button class="${mp.emoji===e&&!mp.photo?"on":""}" onclick="mpEmoji('${e}')">${e}</button>`).join("")}<input class="anyemoji" id="mp-wemoji" placeholder="any" aria-label="Type any emoji" maxlength="8" value="${mp.emoji&&!EMOJIS.includes(mp.emoji)?mp.emoji:""}" oninput="mpEmojiTyped(this)"></div>`:""}
+    ${rankedListHTML(wishRows(kid,allowanceWishes(D,kid.id)),"Nothing yet. Add something you'd like to save for.")}
+    ${occasions(D).map(o=>{ const sec=wishSection(D,kid.id,o.id); return sec.length?`${occasionHead(kid,o)}${rankedListHTML(wishRows(kid,sec),"")}`:""; }).join("")}
+    <div class="actions"><button class="notnow" onclick="closePage()">← My board</button><button class="notnow" onclick="mpMode('rest')">💰 My money</button></div>`;
 }
 function renderStoryPage(kid){
   const mp=state.mp, all=storyEvents(state.data,kid.id).filter(e=>mp.filter==="all"||(mp.filter==="stars"?e.star:(e.jar===mp.filter||e.kind==="allowance")));
@@ -2669,7 +2813,7 @@ window.amImportRows=()=>{ // one-time ledger import (allowance-import.json from 
 window.amGoalField=(id,f,v)=>{ const g=state.data.goals.find(x=>x.id===id); if(!g) return;
   if(f==="target"){ const x=parseFloat(v); g.target=isNaN(x)||x<=0?null:r2(x); checkGoals(state.data,g.kid); } else if(f==="onHand") g.onHand=!!v; else g[f]=v; save(); render(); };
 window.amGoalAct=(id,st)=>{ const D=state.data, g=D.goals.find(x=>x.id===id); if(!g) return;
-  if(st==="active"){ if(!activateGoal(D,id)){ toast("Set a price first"); return; } }
+  if(st==="active"){ if(!activateGoal(D,id)){ toast("Occasion wishes aren't saving goals"); return; } }
   else if(st==="dropped") dropGoal(D,id);
   else { g.status="wishlist"; g.rank=99; renumber(D,g.kid); }
   save(); render(); };
@@ -2677,7 +2821,23 @@ window.amPurchase=(id)=>{ const D=state.data, g=D.goals.find(x=>x.id===id); cons
   const row={kid:g.kid,date:todayKey(state.now),acct:"save",amt:-Math.abs(amt),type:"purchase",goalId:g.id,origin:"user"};
   if(needsRegen(D,g.kid,row)){ const ch=regenerate(D,g.kid,[row]); if(ch.length){ state.am.diff={row,changes:ch}; state.am.tab="ledger"; state.am.kid=g.kid; render(); return; } }
   recordPurchase(D,id,amt); save(); render(); toast(`Purchase recorded: ${fmtMoneyC(amt)} from save`); };
-window.amAddGoal=()=>{ const t=$("#am-gtitle").value.trim(); if(!t){ toast("Name it first"); return; } const g=addWish(state.data,state.am.kid,t,"🎁"); const p=parseFloat($("#am-gprice").value); if(!isNaN(p)&&p>0) g.target=r2(p); save(); render(); };
+window.amGoalOccasion=(id,v)=>{ setWishOccasion(state.data,id,v); save(); render(); };
+window.amGoalEmoji=(id,v)=>{ const g=state.data.goals.find(x=>x.id===id); if(!g) return; const e=firstGrapheme(v); if(e) g.emoji=e; save(); render(); };
+function pickImage(cb){ // file picker (camera roll or camera on the iPad); the picture is fit inside a 256px white square so it stays small in storage and in the sync
+  const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+  inp.onchange=e=>{ const f=e.target.files[0]; if(!f) return; const img=new Image(); const url=URL.createObjectURL(f);
+    img.onload=()=>{ const S=256, sc=Math.min(S/img.width,S/img.height), w=Math.round(img.width*sc), h=Math.round(img.height*sc);
+      const cv=document.createElement("canvas"); cv.width=cv.height=S; const cx=cv.getContext("2d"); cx.fillStyle="#fff"; cx.fillRect(0,0,S,S); cx.drawImage(img,(S-w)/2,(S-h)/2,w,h); URL.revokeObjectURL(url);
+      cb(cv.toDataURL("image/jpeg",0.82)); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); toast("Couldn't read that image"); };
+    img.src=url; };
+  inp.click(); }
+window.setGoalImage=(id)=>{ pickImage(url=>{ const g=state.data.goals.find(x=>x.id===id); if(!g) return; g.image=url; save(); render(); toast("Photo set"); }); };
+window.mpWishPhoto=()=>{ pickImage(url=>{ state.mp.photo=url; state.mp.pickOpen=false; render(); }); }; // kid side: a photo for the wish being added (v0.39)
+window.mpWishPhotoClear=()=>{ state.mp.photo=null; render(); };
+window.clearGoalImage=(id)=>{ const g=state.data.goals.find(x=>x.id===id); if(!g) return; delete g.image; save(); render(); };
+function goalIcon(g){ return g.image?`<img src="${g.image}" alt="">`:(g.emoji||WISH_ICON); } // photo wins over emoji wherever a wish is pictured
+window.amAddGoal=()=>{ const t=$("#am-gtitle").value.trim(); if(!t){ toast("Name it first"); return; } const g=addWish(state.data,state.am.kid,t,WISH_ICON); const p=parseFloat($("#am-gprice").value); if(!isNaN(p)&&p>0) g.target=r2(p); save(); render(); };
 
 function renderAdultMoney(){
   const D=state.data; ensureMoney(D); generateRuns(D,state.now);
@@ -2708,22 +2868,24 @@ function renderAdultMoney(){
       <table class="ledger"><tr><th>Date</th><th>Jar</th><th>Type</th><th class="num">Amount</th><th>Note</th><th>Origin</th></tr>
       ${rows.map(r=>`<tr class="${r.origin==="system"?"sys":""}"><td>${md(r.date)}</td><td>${r.acct}</td><td>${r.type}</td><td class="num">${fmtMoneyC(r.amt)}</td><td>${r.note||(r.type==="interest"?`${Math.round(r.rate*100)}% of ${fmtMoneyC(r.base)}`:"")}</td><td><span class="badge">${r.origin}</span></td></tr>`).join("")}</table>
       ${rows.length?"":`<div class="empty">No lines yet.</div>`}`; }
-  if(tab==="goals"){ const kid=state.am.kid, gs=goalsFor(D,kid).filter(g=>g.currency==="money").sort((a,b)=>({active:0,achieved:1,wishlist:2,dropped:3}[a.status]-{active:0,achieved:1,wishlist:2,dropped:3}[b.status])||(a.rank??0)-(b.rank??0));
+  if(tab==="goals"){ const kid=state.am.kid, gs=goalsFor(D,kid).filter(g=>g.currency==="money").sort((a,b)=>({active:0,achieved:1,wishlist:2,dropped:3}[a.status]-{active:0,achieved:1,wishlist:2,dropped:3}[b.status])||(a.occasion||"").localeCompare(b.occasion||"")||(a.rank??0)-(b.rank??0));
     const unbought=achievedUnbought(D,kid).map(g=>g.id);
     body=`<div class="addline"><select onchange="amKid(this.value)">${kids.map(k=>`<option value="${k.id}" ${k.id===kid?"selected":""}>${k.name}</option>`).join("")}</select>
       <input type="text" id="am-gtitle" placeholder="New wish (adult-added)" style="flex:1;min-width:140px"><input type="text" id="am-gprice" inputmode="decimal" placeholder="price" style="width:70px"><button class="pri" onclick="amAddGoal()">Add</button></div>
-      <table class="gtable"><tr><th>Item</th><th>Status</th><th style="width:80px">Price $</th><th>Link</th><th>Notes</th><th>On hand</th><th></th></tr>
-      ${gs.map(g=>`<tr><td>${g.emoji||""} ${g.title}<div class="rmeta">added ${g.addedAt?md(g.addedAt):""}</div></td><td><span class="badge ${g.status==="active"?"ok":g.status==="dropped"?"bad":""}">${g.status}</span></td>
+      <table class="gtable"><tr><th>Item</th><th>Status</th><th>For</th><th style="width:80px">Price $</th><th>Link</th><th>Notes</th><th>On hand</th><th></th></tr>
+      ${gs.map(g=>`<tr><td><div class="gitem"><div class="gpic">${goalIcon(g)}</div><div>${g.title}<div class="rmeta">added ${g.addedAt?md(g.addedAt):""}</div>
+            <div class="gpicbtns"><input type="text" value="${g.emoji||""}" placeholder="${WISH_ICON}" title="Emoji" onchange="amGoalEmoji('${g.id}',this.value)"><button onclick="setGoalImage('${g.id}')">${g.image?"Change photo":"Photo"}</button>${g.image?`<button onclick="clearGoalImage('${g.id}')">Remove photo</button>`:""}</div></div></div></td><td><span class="badge ${g.status==="active"?"ok":g.status==="dropped"?"bad":""}">${g.status}</span></td>
+        <td>${g.status==="wishlist"?`<select onchange="amGoalOccasion('${g.id}',this.value)"><option value="">Allowance</option>${occasions(D).map(o=>`<option value="${o.id}" ${g.occasion===o.id?"selected":""}>${o.icon} ${o.name}</option>`).join("")}</select>`:(g.occasion?`${occasionOf(D,g.occasion)?.icon||""} ${occasionOf(D,g.occasion)?.name||g.occasion}`:"")}</td>
         <td><input type="text" inputmode="decimal" value="${g.target??""}" onchange="amGoalField('${g.id}','target',this.value)" style="width:70px"></td>
         <td><input type="text" value="${g.url||""}" placeholder="https://" onchange="amGoalField('${g.id}','url',this.value)"></td>
         <td><input type="text" value="${g.notes||""}" placeholder="where they saw it, which one" onchange="amGoalField('${g.id}','notes',this.value)"></td>
         <td><input type="checkbox" ${g.onHand?"checked":""} onchange="amGoalField('${g.id}','onHand',this.checked)"></td>
-        <td class="btns">${g.status==="wishlist"?`<button onclick="amGoalAct('${g.id}','active')" ${g.target==null?"disabled":""}>Make active</button><button class="bad" onclick="amGoalAct('${g.id}','dropped')">Drop</button>`:""}
+        <td class="btns">${g.status==="wishlist"?`<button onclick="amGoalAct('${g.id}','active')">Make active</button><button class="bad" onclick="amGoalAct('${g.id}','dropped')">Drop</button>`:""}
           ${g.status==="active"?`<button onclick="amGoalAct('${g.id}','wishlist')">Back to list</button>`:""}
           ${g.status==="dropped"?`<button onclick="amGoalAct('${g.id}','wishlist')">Restore</button>`:""}
           ${unbought.includes(g.id)?`<input type="text" id="am-price-${g.id}" inputmode="decimal" value="${g.target}" style="width:64px" title="actual price"><button class="pri" onclick="amPurchase('${g.id}')">Record purchase</button>`:""}</td></tr>`).join("")}</table>
       ${gs.length?"":`<div class="empty">No wishes yet. Kids add them from their money page.</div>`}
-      <div class="note">Kids add title and picture; you own price, link, notes, and on-hand. A wish without a price can't become a goal. Reaching a goal marks it achieved; recording the purchase writes the save-jar line (default the target, edit for the real price).</div>`; }
+      <div class="note">Kids add title and picture; you own price, link, notes, and on-hand. A goal without a price shows "Mom is adding the price" and can't be reached until it has one (To Review nags you). Reaching a goal marks it achieved; recording the purchase writes the save-jar line (default the target, edit for the real price).</div>`; }
   if(tab==="rewards") body=renderAdultRewards(kids);
   return `<div class="sect" style="margin-top:14px"><h3>Money & rewards</h3><div class="card money-adult">${tabs}${body}</div></div>`;
 }
@@ -3091,13 +3253,13 @@ function cloudStatusLine(){
   generateDay(state.data, state.now);
   generateRuns(state.data, state.now);
   save(); render();
-  loadLunch().then(render);
+  loadLunch().then(render); loadWeather().then(render);
   let shownDay=todayKey(state.now);
   const refreshNow=()=>{ state.now=new Date(); const dk=todayKey(state.now); if(dk===shownDay) return false;
     shownDay=dk; if(!state.data) return false; // new calendar day: close out yesterday, create today's occurrences, redraw
     if(todayKey(state.cursor)<dk) state.cursor=new Date(state.now);
-    generateDay(state.data,state.now); generateRuns(state.data,state.now); save(); render(); loadLunch().then(render); return true; };
-  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") refreshNow(); });
+    generateDay(state.data,state.now); generateRuns(state.data,state.now); save(); render(); loadLunch().then(render); loadWeather(true).then(render); return true; };
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ if(!refreshNow()) loadWeather().then(render); } }); // same day: refresh the forecast if it's over an hour old
   window.addEventListener("pageshow",refreshNow);
   setInterval(()=>{ // live timers — but never clobber text being typed
     if(refreshNow()) return;
