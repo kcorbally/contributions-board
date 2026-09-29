@@ -50,6 +50,7 @@ body.dashmode .topbar .toggle{display:none}
 .dash .dtile .th{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:"Fredoka";font-size:1.15rem;font-weight:600}
 .dash .dtile .th .chev{color:var(--k-muted);font-size:1.4rem;font-weight:400}
 .dash .dtile .th .thr{display:flex;align-items:center;gap:8px}
+.dash .dbuild{font-size:.7rem;color:var(--k-muted);text-align:center;opacity:.8}
 .kidcol.dash{min-width:900px} /* header and grid stay as wide as the content; narrow screens scroll sideways */
 .dash .trow{flex-direction:column;gap:6px} .dash .trow .tbtn{width:100%;padding:10px 14px;font-size:1rem}
 .dash .dtile .th b{font-size:1.5rem;font-weight:700;color:var(--k-main);display:inline-block}
@@ -1540,7 +1541,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.42.4 · resync from the cloud when the page wakes up";
+const BUILD="v0.42.5 · dashboard shows a reached goal; version and sync state under the tiles";
 const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
@@ -1659,12 +1660,13 @@ function dashUrl(kid){ const u=new URL(location.href); if(kid) u.searchParams.se
 function renderDashboard(kid,dk){
   const D=state.data, P=renderKidCol(kid,dk,{parts:true}), others=D.people.filter(p=>p.role==="child"&&p.id!==kid.id);
   // wishes: the hero tile
-  const g=activeGoal(D,kid.id);
+  const got=achievedUnbought(D,kid.id)[0], g=activeGoal(D,kid.id); // same priority as the money page: a reached goal waiting to be bought comes first
   const save=P.kb.save, pct=g&&g.target!=null?Math.min(100,Math.round(save/g.target*100)):0;
   const wishTile=`<div class="dtile wishes" role="button" onclick="openMoney('${kid.id}','wish')">
     <div class="th"><span>❤️ My wishes</span><span class="chev">›</span></div>
+    ${got?`<div class="tgoal"><div class="pic">${goalIcon(got)}</div><div class="info"><small>You did it!</small><b>${got.title}</b><span>${got.onHand?"Mom has it ready for you.":"Time to go get it."}</span></div></div>`:""}
     ${g?`<div class="tgoal"><div class="pic">${goalIcon(g)}</div><div class="info"><small>Saving for</small><b>${g.title}</b><span>${g.target!=null?`${fmtMoneyC(save)} of ${fmtMoneyC(g.target)}`:`${fmtMoneyC(save)} saved · Mom is adding the price`}</span><div class="bar"><div style="width:${pct}%"></div></div></div></div>`
-      :`<div class="tgoal none"><div class="pic">?</div><div class="info"><b>No goal yet</b><span>Tap a wish and "Save for this"</span></div></div>`}
+      :got?"":`<div class="tgoal none"><div class="pic">?</div><div class="info"><b>No goal yet</b><span>Tap a wish and "Save for this"</span></div></div>`}
     </div>`; // just the current goal and its status; the full list is one tap away
   // money
   const moneyTile=`<div class="dtile money" role="button" onclick="openMoney('${kid.id}')">
@@ -1694,7 +1696,7 @@ function renderDashboard(kid,dk){
     ${P.hueOpen?`<div class="huerow"><span>My color</span><span class="swatches">${HUE_PRESETS.map(h=>`<button data-hue="${h.h}" class="${kid.hue===h.h?"on":""}" title="${h.n}" style="background:oklch(0.76 0.19 ${h.h})" onclick="setHue('${kid.id}',${h.h})"></button>`).join("")}</span></div>`:""}
     <div class="dashgrid">
       <div class="left">${P.todayHTML}${P.extraHTML}</div>
-      <div class="rail">${weatherStripHTML()}${wishTile}${moneyTile}${starTile}${ideaTile}</div>
+      <div class="rail">${weatherStripHTML()}${wishTile}${moneyTile}${starTile}${ideaTile}<div class="dbuild">${BUILD.split(" · ")[0]}${cloud.status==="on"?` · ☁️${cloud.live?" live":" not live"}`:" · offline"}</div></div>
     </div></div>`;
 }
 window.openWish=(kidId)=>{ openMoney(kidId,'wish'); setTimeout(()=>$("#mp-wtitle")?.focus(),60); };
