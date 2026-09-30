@@ -83,7 +83,10 @@ body.dashmode .topbar .toggle{display:none}
 .dash .tj span{font-size:.8rem;color:var(--k-muted)}
 .dash .tcta{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--money-soft);border:2px solid var(--money);border-radius:14px;padding:8px 10px;font-family:"Fredoka";font-size:1rem}
 .dash .trow{display:flex;justify-content:flex-end}
-.dash .tkind{display:flex;align-items:center;gap:12px;border-top:1px solid var(--k-soft);padding-top:10px}
+.dash .tsec{border-top:2px solid var(--k-accent);padding-top:8px;display:flex;flex-direction:column;gap:8px;cursor:pointer}
+.dash .tsec .tsh{display:flex;align-items:center;justify-content:space-between;font-family:"Fredoka";font-weight:600;font-size:1rem;color:var(--k-ink)}
+.dash .tsec .tsh .chev{color:var(--k-muted);font-size:1.4rem;font-weight:400;line-height:1}
+.dash .tkind{display:flex;align-items:center;gap:12px}
 .dash .tkind .kstar .wedge{stroke:#fff}
 .dash .tkind .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .dash .tkind .info b{font-family:"Fredoka";font-size:1.05rem}
@@ -613,7 +616,7 @@ a.chip{color:var(--adult)}
 .pendchip{font-size:.7rem;background:rgba(255,255,255,.85);color:#8a6414;border-radius:999px;padding:1px 6px;margin-left:4px;font-weight:600}
 .pendchip.money{background:var(--money);color:#fff}
 .kidhead .avatar{box-shadow:0 0 0 2px rgba(255,255,255,.7)}
-.kidhead .avlink{display:inline-flex;border-radius:999px;text-decoration:none;color:inherit} .kidhead .avlink:hover .avatar{box-shadow:0 0 0 3px #fff}
+.avlink{display:inline-flex;border-radius:999px;text-decoration:none;color:inherit;background:transparent;padding:0;cursor:pointer} .avlink:hover .avatar{box-shadow:0 0 0 3px var(--k-main)} .kidhead .avlink:hover .avatar{box-shadow:0 0 0 3px #fff}
 .huedoor{background:transparent;border-radius:999px;width:36px;height:36px;display:grid;place-items:center;color:#fff}
 .huedoor.on{background:rgba(255,255,255,.25)}
 .huerow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:8px 14px;font-family:"Fredoka"}
@@ -1566,7 +1569,7 @@ function actualMin(i){ if(!i.startedAt||!i.completedAt) return null;
 /* =========================================================================
    STORAGE — artifact persistent storage with JSON import/export fallback
    ========================================================================= */
-const BUILD="v0.43.1 · fix: cloud resync loop was undoing changes; avatar opens the dashboard";
+const BUILD="v0.44 · dashboard: wishes under Money, star goal under Stars; photo circle goes home everywhere";
 const state = { lunch:null, data:null, view:"kids", now:new Date(), page:null, cursor:new Date(), adultMode:"day", mp:null, am:null, rp:null };
 
 const KEY="contributions-v1";
@@ -1688,24 +1691,25 @@ function renderDashboard(kid,dk){
   // wishes: the hero tile
   const pend=pendingGoals(D,kid.id), g=activeGoal(D,kid.id); // pending purchases first, then the active wish, else "pick one"
   const save=P.kb.save, pct=g&&g.target!=null?Math.min(100,Math.round(save/g.target*100)):0;
-  const wishTile=`<div class="dtile wishes" role="button" onclick="openMoney('${kid.id}','wish')">
-    <div class="th"><span>❤️ My wishes</span><span class="chev">›</span></div>
+  const wishSection=`<div class="tsec" role="button" onclick="event.stopPropagation();openMoney('${kid.id}','wish')"><div class="tsh"><span>❤️ My wishes</span><span class="chev">›</span></div>
     ${pend.map(x=>`<div class="tgoal"><div class="pic">${goalIcon(x)}</div><div class="info"><small>Getting it!</small><b>${x.title}</b><span>${x.onHand?"Mom has it ready for you.":"Mom is getting it."}</span></div></div>`).join("")}
     ${g?`<div class="tgoal"><div class="pic">${goalIcon(g)}</div><div class="info"><small>Saving for</small><b>${g.title}</b><span>${g.target!=null?`${fmtMoneyC(save)} of ${fmtMoneyC(g.target)}${save>=g.target?" · you have enough!":""}`:`${fmtMoneyC(save)} saved · Mom is adding the price`}</span><div class="bar"><div style="width:${pct}%"></div></div></div></div>`
-      :`<div class="tgoal none"><div class="pic">?</div><div class="info"><b>No wish yet</b><span>Pick one to save for</span></div></div>`}
-    </div>`; // the full list is one tap away
-  // money
+      :`<div class="tgoal none"><div class="pic">?</div><div class="info"><b>No wish yet</b><span>Pick one to save for</span></div></div>`}</div>`;
+  // money: balance and jars, then what the money is for
   const moneyTile=`<div class="dtile money" role="button" onclick="openMoney('${kid.id}')">
     <div class="th"><span>💰 My money</span><span class="thr"><b class="${P.moneyPop?"pop":""}">${fmtMoney(P.kidTotal)}</b><span class="chev">›</span></span></div>
     <div class="tjars">${["spend","save","share"].map(k=>`<div class="tj j-${k}"><b>${fmtMoney(P.kb[k])}</b><span>${k}</span></div>`).join("")}</div>
     ${P.pendRun?`<div class="tcta"><span>🎉 Allowance day!</span><button class="tbtn go" onclick="event.stopPropagation();openMoney('${kid.id}','run')">Let's go</button></div>`
-      :P.kb.holding>0?`<div class="tcta"><span>${fmtMoney(P.kb.holding)} waiting for you to pick a jar</span><button class="tbtn" onclick="event.stopPropagation();openMoney('${kid.id}')">Put it in</button></div>`:""}</div>`;
-  // stars + star points
+      :P.kb.holding>0?`<div class="tcta"><span>${fmtMoney(P.kb.holding)} waiting for you to pick a jar</span><button class="tbtn" onclick="event.stopPropagation();openMoney('${kid.id}')">Put it in</button></div>`:""}
+    ${wishSection}</div>`;
+  // stars: balance, then what the stars are for, then star points
   const sg=starGoal(D,kid.id), avail=P.starsNow, spct=sg?Math.min(100,Math.round(avail/sg.target*100)):0;
   const starTile=`<div class="dtile stars">
     <div class="th" role="button" onclick="openRewards('${kid.id}')"><span>⭐ My stars</span><span class="thr"><b class="${P.starPop?"pop":""}">${avail}${P.pendStars?`<small title="being checked">+${P.pendStars}</small>`:""}</b><span class="chev">›</span></span></div>
-    ${sg?`<div class="tgoal" role="button" onclick="openRewards('${kid.id}')"><div class="pic">${sg.emoji||"🎁"}</div><div class="info"><small>Saving up for</small><b>${sg.title}</b><span>${avail} of ${sg.target} ★</span><div class="bar"><div style="width:${spct}%"></div></div></div></div>`:""}
-    <div class="tkind" role="button" onclick="openKindness('${kid.id}')">${starWedges(P.partial,44,P.kindPop?"pop":"")}<div class="info"><b>Star points <span>${P.partial}<small>/5</small></span></b><span>${5-P.partial} more make a star</span></div><span class="chev">›</span></div>
+    <div class="tsec" role="button" onclick="openRewards('${kid.id}')"><div class="tsh"><span>🎁 Saving up for</span><span class="chev">›</span></div>
+      ${sg?`<div class="tgoal"><div class="pic">${sg.emoji||"🎁"}</div><div class="info"><small>Saving up for</small><b>${sg.title}</b><span>${avail} of ${sg.target} ★${avail>=sg.target?" · you have enough!":""}</span><div class="bar"><div style="width:${spct}%"></div></div></div></div>`
+        :`<div class="tgoal none"><div class="pic">?</div><div class="info"><b>Nothing yet</b><span>Pick a reward to save up for</span></div></div>`}</div>
+    <div class="tsec" role="button" onclick="openKindness('${kid.id}')"><div class="tkind">${starWedges(P.partial,44,P.kindPop?"pop":"")}<div class="info"><b>Star points <span>${P.partial}<small>/5</small></span></b><span>${5-P.partial} more make a star</span></div><span class="chev">›</span></div></div>
     ${others.length?`<div class="trow">${others.map(o=>`<button class="tbtn" onclick="openKindnessGive('${kid.id}','${o.id}')">💛 Give ${o.name} a star point</button>`).join("")}</div>`:""}
     ${P.unseen.length?`<div class="kindbanner small"><span>💛 ${[...new Set(P.unseen.map(x=>x.giver))].map(nameOf).join(" and ")} gave you ${P.unseen.length===1?"a star point":P.unseen.length+" star points"}!</span><button onclick="kpSeen('${kid.id}')">See it</button></div>`:""}</div>`;
   const ideas=openIdeas(D,kid.id), top1=ideas[0];
@@ -1722,7 +1726,7 @@ function renderDashboard(kid,dk){
     ${P.hueOpen?`<div class="huerow"><span>My color</span><span class="swatches">${HUE_PRESETS.map(h=>`<button data-hue="${h.h}" class="${kid.hue===h.h?"on":""}" title="${h.n}" style="background:oklch(0.76 0.19 ${h.h})" onclick="setHue('${kid.id}',${h.h})"></button>`).join("")}</span></div>`:""}
     <div class="dashgrid">
       <div class="left">${P.todayHTML}${P.extraHTML}</div>
-      <div class="rail">${weatherStripHTML()}${wishTile}${moneyTile}${starTile}${ideaTile}<div class="dbuild">${BUILD.split(" · ")[0]}${cloud.status==="on"?` · ☁️${cloud.live?" live":" not live"}`:" · offline"}</div></div>
+      <div class="rail">${weatherStripHTML()}${moneyTile}${starTile}${ideaTile}<div class="dbuild">${BUILD.split(" · ")[0]}${cloud.status==="on"?` · ☁️${cloud.live?" live":" not live"}`:" · offline"}</div></div>
     </div></div>`;
 }
 window.openWish=(kidId)=>{ openMoney(kidId,'wish'); setTimeout(()=>$("#mp-wtitle")?.focus(),60); };
@@ -2218,7 +2222,7 @@ function renderKidCol(kid,dk,opts={}){
   if(opts.parts) return {todayHTML,extraHTML,kb,kidTotal,pendRun,starsNow,pendStars,partial,unseen,starPop,moneyPop,kindPop,kindBanner,hueOpen};
   return `<div class="kidcol" style="--hue:${kid.hue??350}">
     <div class="kidhead" style="background:var(--k-main)">
-      <h2 style="display:flex;align-items:center;gap:10px"><a class="avlink" href="${dashUrl(kid)}" title="${kid.name}'s dashboard" aria-label="${kid.name}'s dashboard">${avatarHTML(kid)}</a>${kid.name}</h2>
+      <h2 style="display:flex;align-items:center;gap:10px">${avatarDoor(kid)}${kid.name}</h2>
       <div class="doors"><button class="jar stardoor" onclick="openRewards('${kid.id}')" aria-label="${starsNow} stars${pendStars?`, ${pendStars} being checked`:""}">⭐ <span class="${starPop?"pop":""}">${starsNow}</span>${pendStars?`<span class="pendchip" title="waiting for a grown-up to check">+${pendStars}</span>`:""}</button>
         <button class="jar kinddoor" onclick="openKindness('${kid.id}')" aria-label="Star points: ${partial} of 5${unseen.length?`, ${unseen.length} new`:""}" title="Kindness star points">${starWedges(partial,26,kindPop?"pop":"")}<span class="${kindPop?"pop":""}">${partial}<small>/5</small></span></button>
         <button class="moneydoor" onclick="openMoney('${kid.id}')" aria-label="My money${kb.holding>0?`, ${fmtMoney(kb.holding)} waiting for you`:""}">💰 <span class="${moneyPop?"pop":""}">${fmtMoney(kidTotal)}</span>${kb.holding>0?`<span class="pendchip money" title="waiting for you to pick a jar">+${fmtMoney(kb.holding)}</span>`:""}</button>
@@ -2714,6 +2718,8 @@ window.addPerson=()=>{ const D=state.data, name=$("#np_name").value.trim(); if(!
 window.setHue=(pid,h)=>{ setHueInner(pid,h); if(state.dashKid===pid) document.body.style.setProperty("--hue",h); };
 const setHueInner=(pid,h)=>{ state.data.people.find(p=>p.id===pid).hue=+h; save(); render(); };
 window.toggleHue=(pid)=>{ state.hueOpen=state.hueOpen===pid?null:pid; render(); };
+function avatarDoor(kid){ // the photo circle is the way home: to that kid's dashboard (in place when already on it, by address otherwise)
+  return state.dashKid===kid.id?`<button class="avlink" onclick="closePage()" title="My dashboard" aria-label="My dashboard">${avatarHTML(kid)}</button>`:`<a class="avlink" href="${dashUrl(kid)}" title="${kid.name}'s dashboard" aria-label="${kid.name}'s dashboard">${avatarHTML(kid)}</a>`; }
 function avatarHTML(p,cls){ return p.avatar?`<span class="avatar ${cls||""}"><img src="${p.avatar}" alt=""></span>`:`<span class="avatar ${cls||""}">${(p.name||"?")[0].toUpperCase()}</span>`; }
 window.setAvatar=(pid)=>{ // photo circle for the kid pages; downscaled to 160px so it stays small in storage
   const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
@@ -2832,7 +2838,7 @@ function renderMoneyPage(kidId){
   else body=renderResting(kid);
   const steps=mp.mode==="run"?`<div class="steps">${[0,1,2,3,4].map(i=>`<i class="${i<mp.step?"done":""}"></i>`).join("")}</div>`:"";
   return `<div class="kidcol" style="--hue:${kid.hue??350}"><div class="mp">
-    <div class="top"><button class="backbtn" onclick="closePage()">← Back</button><div class="who">${avatarHTML(kid)}${kid.name}</div>${steps}
+    <div class="top"><button class="backbtn" onclick="closePage()">← Back</button><div class="who">${avatarDoor(kid)}${kid.name}</div>${steps}
       <span style="font-size:.85rem;color:var(--k-muted)">${run?`Run for ${dowName(dowOfKey(run.date)).slice(0,3)} ${md(run.date)}`:""}</span></div>
     <div class="mcard">${body}</div></div></div>`;
 }
@@ -2990,7 +2996,7 @@ function renderIdeasPage(kidId){
   if(!state.ip||state.ip.kid!==kidId) state.ip={kid:kidId,emoji:null,photo:null,pickOpen:false,editing:null,open:{}};
   const open=openIdeas(D,kidId), done=ideasFor(D,kidId,"done").sort((a,b)=>(b.doneAt||"").localeCompare(a.doneAt||""));
   return `<div class="kidcol" style="--hue:${kid.hue??350}"><div class="mp ideas">
-    <div class="top"><button class="backbtn" onclick="closePage()">← Back</button><div class="who">${avatarHTML(kid)}${kid.name}</div></div>
+    <div class="top"><button class="backbtn" onclick="closePage()">← Back</button><div class="who">${avatarDoor(kid)}${kid.name}</div></div>
     <div class="mcard">
       <div class="head"><h1>My ideas</h1><p>Things to build, make, or do. Add steps so you know what you need.</p></div>
       ${pickerHTML("ip",IDEA_ICON,"What's the idea?","ipAdd")}
@@ -3179,7 +3185,7 @@ function renderRewardsPage(kidId){
       ${a.cash?"":`<textarea id="rp-note" placeholder="Like: Friday? Mint chip?" maxlength="120"></textarea>`}
       <div class="btns"><button class="go" onclick="rpSend()">Send to Mom</button><button class="notnow" onclick="rpAskNo()">Never mind</button></div></div>`; }
   return `<div class="kidcol" style="--hue:${kid.hue??350}"><div class="mp rp">
-    <div class="top"><button class="backbtn" onclick="closePage()">← Back</button><div class="who">${avatarHTML(kid)}${kid.name}</div><span></span></div>
+    <div class="top"><button class="backbtn" onclick="closePage()">← Back</button><div class="who">${avatarDoor(kid)}${kid.name}</div><span></span></div>
     <div class="mcard" style="align-items:stretch;text-align:left">
       <div style="text-align:center"><h1>My rewards</h1><div class="starsbig">${avail} ★${bal!==avail?`<small>${bal-avail} ★ saved for your requests</small>`:""}${pendN?`<small>+${pendN} ★ waiting for a grown-up to check</small>`:""}${bal<0?`<small>Mom sent a task back; the next star covers it</small>`:""}</div></div>
       <div class="lanes">
@@ -3250,7 +3256,7 @@ function renderKindnessPage(kidId){
   if(!kid||kid.role!=="child"){ state.page=null; return ""; }
   if(!state.kp||state.kp.kid!==kidId) kpReset(kidId);
   ensureKindness(D); const k=state.kp, n=partialPoints(D,kidId), got=pointsReceived(D,kidId), gave=pointsGiven(D,kidId), stars=kindnessStars(D,kidId);
-  const top=(who)=>`<div class="top"><button class="backbtn" onclick="${k.step?"kpCancel()":"closePage()"}">← ${k.step?"Never mind":"Back"}</button><div class="who">${avatarHTML(who)}${who.name}</div><span></span></div>`;
+  const top=(who)=>`<div class="top"><button class="backbtn" onclick="${k.step?"kpCancel()":"closePage()"}">← ${k.step?"Never mind":"Back"}</button><div class="who">${avatarDoor(who)}${who.name}</div><span></span></div>`;
   let body;
   if(k.step==="show"){ // the receiver's screen: turn the iPad toward them
     const p=D.kindness.find(x=>x.id===k.shown), to=D.people.find(x=>x.id===(p?p.receiver:k.to)), nn=partialPoints(D,to.id), full=nn===0;
