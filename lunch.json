@@ -1,27 +1,32 @@
 {
  "school": "Richland Elementary",
  "source": "https://smusd.yumyummi.com/webapp/richland-elementary/weekly/lunch",
- "fetched": "2026-10-05T10:06:15+00:00",
+ "fetched": "2026-10-05T20:56:24+00:00",
  "weekStart": "2026-10-05",
  "days": {
-  "2026-10-05": [
-   "No School Today - Enjoy your break"
-  ],
+  "2026-10-05": [],
   "2026-10-06": [
-   "Sausage & Gravy Breakfast Pizza B104E",
-   "French Toast B58E"
+   "Chicken Poppers w Smiley Potatoes 3rd-5th grade",
+   "Chicken Poppers W/Smiley Potatoes TK-2",
+   "Stuffed Crust Cheese Pizza (V)",
+   "Stuffed Crust Pepperoni Pizza (P)",
+   "Rice Krispy treat"
   ],
   "2026-10-07": [
-   "Banana Chunk Bar (B25E/B25H)",
-   "Grilled Cheese Sandwich (V)"
+   "Cheese Quesadilla",
+   "Chef Salad 315H",
+   "Chicken Taquito 192 E",
+   "Mandarin Orange Chicken With Whole Grain Brown Rice"
   ],
   "2026-10-08": [
-   "Chicken Biscuit B14E",
-   "Concha Bread B12E B12H"
+   "Mini Corn Dogs",
+   "Spaghetti with Homemade Beef Meat Sauce",
+   "Spaghetti with PlantBorn Pasta Sauce"
   ],
   "2026-10-09": [
-   "Smoothie Blueberry Strawberry & Banana w/ Grahams",
-   "Homemade Cocoa Breakfast Bread"
+   "Spicy Chicken 181 E/H",
+   "Crispy chicken Sandwich",
+   "Cavatappi, Three Cheese & Garlic Knot"
   ]
  }
 }
