@@ -1,30 +1,27 @@
 {
  "school": "Richland Elementary",
  "source": "https://smusd.yumyummi.com/webapp/richland-elementary/weekly/lunch",
- "fetched": "2026-09-28T19:53:05+00:00",
- "weekStart": "2026-09-28",
+ "fetched": "2026-10-05T10:06:15+00:00",
+ "weekStart": "2026-10-05",
  "days": {
-  "2026-09-28": [
-   "Cheese Deep Dish Personal 5`` Pizza wild mikes",
-   "Pizza, Personal Pan Pepperoni"
+  "2026-10-05": [
+   "No School Today - Enjoy your break"
   ],
-  "2026-09-29": [
-   "PlantBorn Soft Taco",
-   "Beef Nachos",
-   "Cheesy Pull-Aparts"
+  "2026-10-06": [
+   "Sausage & Gravy Breakfast Pizza B104E",
+   "French Toast B58E"
   ],
-  "2026-09-30": [
-   "Mandarin Orange Chicken With Whole Grain Brown Rice",
-   "Beef Taco Salad w tortilla Chips"
+  "2026-10-07": [
+   "Banana Chunk Bar (B25E/B25H)",
+   "Grilled Cheese Sandwich (V)"
   ],
-  "2026-10-01": [
-   "Lasagna Bake W/ Garlic Knot",
-   "Chicken Corndog"
+  "2026-10-08": [
+   "Chicken Biscuit B14E",
+   "Concha Bread B12E B12H"
   ],
-  "2026-10-02": [
-   "Bean & Cheese Burrito",
-   "Crispy chicken Sandwich",
-   "spicy chicken sand"
+  "2026-10-09": [
+   "Smoothie Blueberry Strawberry & Banana w/ Grahams",
+   "Homemade Cocoa Breakfast Bread"
   ]
  }
 }
