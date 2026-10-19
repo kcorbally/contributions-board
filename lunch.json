@@ -1,7 +1,7 @@
 {
  "school": "Richland Elementary",
  "source": "https://smusd.yumyummi.com/webapp/richland-elementary/weekly/lunch",
- "fetched": "2026-10-19T08:34:06+00:00",
+ "fetched": "2026-10-19T18:52:32+00:00",
  "weekStart": "2026-10-19",
  "days": {
   "2026-10-19": [
@@ -13,7 +13,8 @@
    "Cheese Chili Tamale",
    "Tamale Chicken (red Sauce)",
    "Beans",
-   "Turkey and Cheese Sandwich"
+   "Turkey and Cheese Sandwich",
+   "Grilled Cheese Sandwich"
   ],
   "2026-10-21": [
    "BBQ Rib Plate PORK",
