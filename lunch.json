@@ -1,34 +1,35 @@
 {
  "school": "Richland Elementary",
  "source": "https://smusd.yumyummi.com/webapp/richland-elementary/weekly/lunch",
- "fetched": "2026-10-12T21:27:01+00:00",
- "weekStart": "2026-10-12",
+ "fetched": "2026-10-19T08:34:06+00:00",
+ "weekStart": "2026-10-19",
  "days": {
-  "2026-10-12": [
-   "Chicken n Waffle",
-   "Personal Pan Cheese",
-   "Personal Pan Pepperoni"
+  "2026-10-19": [
+   "Stuffed Crust Cheese Pizza (V)",
+   "Stuffed Crust Pepperoni Pizza (P)",
+   "French Toast Bites w/ Sausage Links"
   ],
-  "2026-10-13": [
-   "Beef Nachos",
-   "Bosco 1 Stick",
-   "Bosco Stick 2",
-   "PlantBorn Nachos"
+  "2026-10-20": [
+   "Cheese Chili Tamale",
+   "Tamale Chicken (red Sauce)",
+   "Beans",
+   "Turkey and Cheese Sandwich"
   ],
-  "2026-10-14": [
-   "Chicken Teriyaki strips & Rice",
-   "Hummus with String Cheese, Sunflower Seeds & Whole Grain Crackers (V)",
-   "Cheese Pizza Crunchers"
+  "2026-10-21": [
+   "BBQ Rib Plate PORK",
+   "Chicken, Caesar Salad with Crackers",
+   "Yogurt , String Cheese & Roll (V)"
   ],
-  "2026-10-15": [
-   "Homestyle Chili Tots",
-   "Bean & Cheese Burrito",
-   "Pulled Pork Barbecue Sliders.M.H)"
+  "2026-10-22": [
+   "Twistaroni With Homemade Beef Meat Sauce",
+   "Twistaroni with PlantBorn Pasta Sauce",
+   "Garlic Knot",
+   "Chicken, Boneless Wings w/ Roll"
   ],
-  "2026-10-16": [
-   "Cheeseburger Grass-Fed",
-   "Hamburger Grass-Fed",
-   "Soft Pretzel with Cheese"
+  "2026-10-23": [
+   "Hot Dog Grass-Fed",
+   "Cheesy Bites",
+   "BBQ Turkey Sandwich on Fresh Potato Bun.H.)"
   ]
  }
 }
