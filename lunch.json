@@ -1,36 +1,38 @@
 {
  "school": "Richland Elementary",
  "source": "https://smusd.yumyummi.com/webapp/richland-elementary/weekly/lunch",
- "fetched": "2026-10-19T18:52:32+00:00",
- "weekStart": "2026-10-19",
+ "fetched": "2026-10-26T08:36:29+00:00",
+ "weekStart": "2026-10-26",
  "days": {
-  "2026-10-19": [
+  "2026-10-26": [
+   "Chicken Poppers w Smiley Potatoes 3rd-5th grade",
+   "Chicken Poppers W/Smiley Potatoes TK-2",
    "Stuffed Crust Cheese Pizza (V)",
-   "Stuffed Crust Pepperoni Pizza (P)",
-   "French Toast Bites w/ Sausage Links"
+   "Stuffed Crust Pepperoni Pizza (P)"
   ],
-  "2026-10-20": [
-   "Cheese Chili Tamale",
-   "Tamale Chicken (red Sauce)",
-   "Beans",
-   "Turkey and Cheese Sandwich",
-   "Grilled Cheese Sandwich"
+  "2026-10-27": [
+   "Cheesy Pull-Aparts",
+   "PlantBorn Soft Taco",
+   "PlantBorn Street Tacos",
+   "Carnitas Street Tacos (pork)"
   ],
-  "2026-10-21": [
-   "BBQ Rib Plate PORK",
-   "Chicken, Caesar Salad with Crackers",
-   "Yogurt , String Cheese & Roll (V)"
+  "2026-10-28": [
+   "Cheese Quesadilla",
+   "Chef`s Salad With Whole Grain Crackers",
+   "Chicken Taquito 192 E",
+   "Mandarin Orange Chicken With Whole Grain Brown Rice"
   ],
-  "2026-10-22": [
-   "Twistaroni With Homemade Beef Meat Sauce",
-   "Twistaroni with PlantBorn Pasta Sauce",
-   "Garlic Knot",
-   "Chicken, Boneless Wings w/ Roll"
+  "2026-10-29": [
+   "Chicken Corndog",
+   "Mini Corn Dogs",
+   "Spaghetti with Homemade Beef Meat Sauce",
+   "Spaghetti with PlantBorn Pasta Sauce",
+   "Garlic Knot"
   ],
-  "2026-10-23": [
-   "Hot Dog Grass-Fed",
-   "Cheesy Bites",
-   "BBQ Turkey Sandwich on Fresh Potato Bun.H.)"
+  "2026-10-30": [
+   "Spicy Chicken 181 E/H",
+   "Crispy chicken Sandwich",
+   "Cavatappi, Three Cheese & Garlic Knot"
   ]
  }
 }
