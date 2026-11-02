@@ -1,38 +1,34 @@
 {
  "school": "Richland Elementary",
  "source": "https://smusd.yumyummi.com/webapp/richland-elementary/weekly/lunch",
- "fetched": "2026-10-26T18:54:59+00:00",
- "weekStart": "2026-10-26",
+ "fetched": "2026-11-02T10:39:17+00:00",
+ "weekStart": "2026-11-02",
  "days": {
-  "2026-10-26": [
-   "Chicken Poppers w Smiley Potatoes 3rd-5th grade",
-   "Chicken Poppers W/Smiley Potatoes TK-2",
-   "Stuffed Crust Cheese Pizza (V)",
-   "Stuffed Crust Pepperoni Pizza (P)"
+  "2026-11-02": [
+   "Brunch For Lunch",
+   "Personal Pan Pepperoni",
+   "Personal Pan Cheese"
   ],
-  "2026-10-27": [
-   "Cheesy Pull-Aparts",
-   "PlantBorn Soft Taco",
-   "PlantBorn Street Tacos",
-   "Carnitas Street Tacos (pork)"
+  "2026-11-03": [
+   "Beef Nachos",
+   "Bosco 1 Stick",
+   "Bosco Stick 2",
+   "PlantBorn Nachos"
   ],
-  "2026-10-28": [
-   "Cheese Quesadilla",
-   "Chef`s Salad With Whole Grain Crackers",
-   "Chicken Taquito 192 E",
-   "Mandarin Orange Chicken With Whole Grain Brown Rice"
+  "2026-11-04": [
+   "Chicken Teriyaki strips & Rice",
+   "Hummus with String Cheese, Sunflower Seeds & Whole Grain Crackers (V)",
+   "Cheese Pizza Crunchers"
   ],
-  "2026-10-29": [
-   "Chicken Corndog",
-   "Mini Corn Dogs",
-   "Spaghetti with Homemade Beef Meat Sauce",
-   "Spaghetti with PlantBorn Pasta Sauce",
-   "Garlic Knot"
+  "2026-11-05": [
+   "Homestyle Chili Tots",
+   "Pulled Pork Barbecue Sliders.M.H)",
+   "Soft Pretzel with Cheese"
   ],
-  "2026-10-30": [
-   "Spicy Chicken 181 E/H",
-   "Crispy chicken Sandwich",
-   "Cavatappi, Three Cheese & Garlic Knot"
+  "2026-11-06": [
+   "Cheeseburger Grass-Fed",
+   "Hamburger Grass-Fed",
+   "Bean & Cheese Burrito"
   ]
  }
 }
