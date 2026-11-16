@@ -1,33 +1,37 @@
 {
  "school": "Richland Elementary",
  "source": "https://smusd.yumyummi.com/webapp/richland-elementary/weekly/lunch",
- "fetched": "2026-11-09T22:45:56+00:00",
- "weekStart": "2026-11-09",
+ "fetched": "2026-11-16T10:44:10+00:00",
+ "weekStart": "2026-11-16",
  "days": {
-  "2026-11-09": [
+  "2026-11-16": [
+   "Chicken Poppers w Smiley Potatoes 3rd-5th grade",
+   "Chicken Poppers W/Smiley Potatoes TK-2",
    "Stuffed Crust Cheese Pizza (V)",
-   "Stuffed Crust Pepperoni Pizza (P)",
-   "French Toast Bites w/ Sausage Links"
+   "Stuffed Crust Pepperoni Pizza (P)"
   ],
-  "2026-11-10": [
-   "Cheese Chili Tamale",
-   "Tamale Chicken (red Sauce)",
-   "Beans",
-   "Turkey and Cheese Sandwich"
+  "2026-11-17": [
+   "Cheesy Pull-Aparts",
+   "PlantBorn Soft Taco",
+   "PlantBorn Street Tacos",
+   "Carnitas Street Tacos (pork)"
   ],
-  "2026-11-11": [
-   "No School Today - Enjoy your break"
+  "2026-11-18": [
+   "Cheese Quesadilla",
+   "Chef`s Salad With Whole Grain Crackers",
+   "Chicken Taquito 192 E",
+   "Mandarin Orange Chicken With Whole Grain Brown Rice"
   ],
-  "2026-11-12": [
-   "Twistaroni With Homemade Beef Meat Sauce",
-   "Twistaroni with PlantBorn Pasta Sauce",
-   "Garlic Knot",
-   "Chicken, Boneless Wings w/ Roll"
+  "2026-11-19": [
+   "Mini Corn Dogs",
+   "Spaghetti with Homemade Beef Meat Sauce",
+   "Spaghetti with PlantBorn Pasta Sauce",
+   "Garlic Knot"
   ],
-  "2026-11-13": [
-   "Hot Dog Grass-Fed",
-   "Cheesy Bites",
-   "BBQ Turkey Sandwich on Fresh Potato Bun.H.)"
+  "2026-11-20": [
+   "Spicy Chicken 181 E/H",
+   "Crispy chicken Sandwich",
+   "Cavatappi, Three Cheese & Garlic Knot"
   ]
  }
 }
